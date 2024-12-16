@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 
 import '../entities/predict_result.dart';
+import '../entities/tools.dart' as tools;
 import '../widgets/blured_image.dart';
 import '../widgets/predict_tile.dart';
 import 'camera_awesome_page.dart';
@@ -19,6 +20,8 @@ class PredictScreen extends StatefulWidget {
 }
 
 class _PredictScreenState extends State<PredictScreen> {
+  static ClassificationModel? classificationModel;
+
   List<PredictResult> topResults = [];
   String imagePath = '';
 
@@ -32,14 +35,16 @@ class _PredictScreenState extends State<PredictScreen> {
       imagePath = path;
     });
 
-    ClassificationModel classificationModel= await PytorchLite.loadClassificationModel(
-        "assets/models/bird_model.pt", 224, 224, 11000,
-        labelPath: "assets/labels/fake_labels.txt");
+    while (classificationModel == null) {
+      classificationModel = await PytorchLite.loadClassificationModel(
+          "assets/models/bird_model.pt", 224, 224, 11000,
+          labelPath: "assets/labels/fake_labels.txt");
+    }
 
-    String imagePrediction = await classificationModel.getImagePrediction(await File(imagePath).readAsBytes());
+    List<double> prediction = await classificationModel!.getImagePredictionList(await File(imagePath).readAsBytes());
 
     setState(() {
-      topResults.add(PredictResult(int.parse(imagePrediction), double.parse(imagePrediction)));
+      topResults = tools.getTop(tools.softmax(prediction));
     });
   }
 

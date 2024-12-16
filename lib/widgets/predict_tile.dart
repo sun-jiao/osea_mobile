@@ -9,8 +9,8 @@ class ResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(
-        Icons.star_border_rounded,
+      leading: Icon(
+        getIcon(result.prob),
       ),
       title: Text(
         result.label,
@@ -18,5 +18,15 @@ class ResultTile extends StatelessWidget {
       ),
       trailing: Text('${(result.prob * 100).toStringAsFixed(2)}%'),
     );
+  }
+
+  static IconData getIcon(double prob) {
+    if (prob > 0.75) {
+      return Icons.star_rounded;
+    } else if (prob > 0.4) {
+      return Icons.star_half_rounded;
+    } else {
+      return Icons.star_border_rounded;
+    }
   }
 }
