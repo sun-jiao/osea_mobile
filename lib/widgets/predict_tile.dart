@@ -16,6 +16,10 @@ class ResultTile extends StatelessWidget {
         result.label,
         style: const TextStyle(fontSize: 18),
       ),
+      subtitle: Text(
+        result.scientificName,
+        style: const TextStyle(fontStyle: FontStyle.italic),
+      ),
       trailing: Text('${(result.prob * 100).toStringAsFixed(2)}%'),
     );
   }
