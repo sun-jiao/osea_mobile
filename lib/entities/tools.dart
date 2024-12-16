@@ -14,15 +14,9 @@ List<double> softmax(List<double> nums) {
   return probabilities.toList();
 }
 
-List<PredictResult> getTop(List<double> probs, {int amount = 3, bool hideLowProb = true}) {
+List<PredictResult> getTop(List<double> probs, {int amount = 3, bool hideLowProb = true, double lowestValue = 0.01}) {
   List<MapEntry<int, double>> sortedList = List.from(probs.asMap().entries)..sort((a, b) => b.value.compareTo(a.value));
-  List<MapEntry<int, double>> filteredList;
-
-  if (hideLowProb) {
-    filteredList = sortedList.where((e) => e.value > 0.01).toList();
-  } else {
-    filteredList = sortedList;
-  }
+  List<MapEntry<int, double>> filteredList = sortedList.where((e) => !hideLowProb || e.value > lowestValue).toList();
 
   return filteredList.take(amount).map((e) => PredictResult(e.key, e.value)).toList();
 }
