@@ -1,9 +1,11 @@
+import 'package:birdid/entities/predict_result.dart';
 import 'package:flutter/material.dart';
 
 import 'pages/predict_page.dart';
 
 void main() {
   runApp(const MyApp());
+  PredictResult.loadSpeciesInfo();
 }
 
 class MyApp extends StatelessWidget {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pytorch_lite/pytorch_lite.dart';
 
 import '../entities/predict_result.dart';
 import '../widgets/blured_image.dart';
@@ -30,7 +31,16 @@ class _PredictScreenState extends State<PredictScreen> {
       topResults.clear();
       imagePath = path;
     });
-    // _uploadAndRecognizeImage(path);
+
+    ClassificationModel classificationModel= await PytorchLite.loadClassificationModel(
+        "assets/models/bird_model.pt", 224, 224, 11000,
+        labelPath: "assets/labels/fake_labels.txt");
+
+    String imagePrediction = await classificationModel.getImagePrediction(await File(imagePath).readAsBytes());
+
+    setState(() {
+      topResults.add(PredictResult(int.parse(imagePrediction), double.parse(imagePrediction)));
+    });
   }
 
   @override
@@ -95,14 +105,7 @@ class _PredictScreenState extends State<PredictScreen> {
                       surfaceTintColor: Colors.white,
                       shadowColor: Colors.transparent,
                       child: Column(
-                        children: [
-                          if (topResults.isNotEmpty)
-                            ResultTile(result: topResults.first),
-                          if (topResults.length > 1)
-                            ResultTile(result: topResults[1]),
-                          if (topResults.length > 2)
-                            ResultTile(result: topResults[2]),
-                        ],
+                        children: topResults.map((e) => ResultTile(result: e)).toList(),
                       ),
                     )
                   ],
