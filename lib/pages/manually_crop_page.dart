@@ -19,19 +19,24 @@ class CropPage extends StatefulWidget {
 class _CropPageState extends State<CropPage> {
   final _controller = CropController();
   late final Uint8List _imageData;
-  
+
   @override
   void initState() {
     _imageData = widget.imageData;
     super.initState();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(onPressed: () {_controller.crop();}, icon: Icon(Icons.check))
+          IconButton(
+              onPressed: () {
+                _controller.crop();
+              },
+              icon: Icon(Icons.check),
+          ),
         ],
       ),
       body: Crop(
@@ -43,13 +48,13 @@ class _CropPageState extends State<CropPage> {
           ),
           interactive: true,
           onCropped: (result) {
-            switch(result) {
+            switch (result) {
               case CropSuccess(:final croppedImage):
                 Navigator.pop(context, croppedImage);
               case CropFailure():
                 return;
             }
-          }
+          },
       ),
     );
   }

@@ -17,11 +17,20 @@ List<double> softmax(List<double> nums) {
   return probabilities.toList();
 }
 
-List<PredictResult> getTop(List<double> probs, {int amount = 3, bool hideLowProb = true, double lowestValue = 0.01}) {
-  List<MapEntry<int, double>> sortedList = List.from(probs.asMap().entries)..sort((a, b) => b.value.compareTo(a.value));
-  List<MapEntry<int, double>> filteredList = sortedList.where((e) => !hideLowProb || e.value > lowestValue).toList();
+List<PredictResult> getTop(List<double> probs, {
+  int amount = 3,
+  bool hideLowProb = true,
+  double lowestValue = 0.01
+}) {
+  List<MapEntry<int, double>> sortedList = List.from(probs.asMap().entries)
+    ..sort((a, b) => b.value.compareTo(a.value));
+  List<MapEntry<int, double>> filteredList =
+      sortedList.where((e) => !hideLowProb || e.value > lowestValue).toList();
 
-  return filteredList.take(amount).map((e) => PredictResult(e.key, e.value)).toList();
+  return filteredList
+      .take(amount)
+      .map((e) => PredictResult(e.key, e.value))
+      .toList();
 }
 
 Future<Uint8List?> cropImage(Uint8List imageData, PyTorchRect rect) async {
@@ -39,7 +48,8 @@ Future<Uint8List?> cropImage(Uint8List imageData, PyTorchRect rect) async {
   final int top = (imageHeight * rect.top).floor();
   final int height = (imageHeight * rect.height).floor();
 
-  final cropped = img.copyCrop(decoded, x: left, y: top, width: width, height: height);
+  final cropped =
+      img.copyCrop(decoded, x: left, y: top, width: width, height: height);
 
   return Uint8List.fromList(img.encodePng(cropped));
 }

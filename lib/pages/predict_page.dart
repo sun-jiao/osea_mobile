@@ -37,6 +37,7 @@ class _PredictScreenState extends State<PredictScreen> {
       // 清空上次的识别结果
       topResults.clear();
       imagePath = path;
+      isPredicting = true;
     });
 
     var file = await File(imagePath).readAsBytes();
@@ -52,11 +53,12 @@ class _PredictScreenState extends State<PredictScreen> {
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
     }
 
-    List<ResultObjectDetection> objDetect = await objectModel!.getImagePrediction(file);
+    List<ResultObjectDetection> objDetect =
+        await objectModel!.getImagePrediction(file);
 
     final birds = objDetect.where((e) => e.className == "bird").toList();
 
-    if (birds.isEmpty){
+    if (birds.isEmpty) {
       if (mounted) {
         final crop = await Navigator.push(context,
             MaterialPageRoute(builder: (context) => CropPage(imageData: file)));
@@ -80,10 +82,12 @@ class _PredictScreenState extends State<PredictScreen> {
           "assets/models/bird_model.pt", 224, 224, 11000);
     }
 
-    List<double> prediction = await classificationModel!.getImagePredictionList(file);
+    List<double> prediction =
+        await classificationModel!.getImagePredictionList(file);
 
     setState(() {
       topResults = tools.getTop(tools.softmax(prediction));
+      isPredicting = false;
     });
   }
 
@@ -127,17 +131,19 @@ class _PredictScreenState extends State<PredictScreen> {
                       surfaceTintColor: Colors.white,
                       shadowColor: Colors.transparent,
                       child: Column(
-                        children: topResults.map((e) => ResultTile(result: e)).toList(),
+                        children: topResults
+                            .map((e) => ResultTile(result: e))
+                            .toList(),
                       ),
-                    )
+                    ),
                   ],
                 )
               : const Center(
-            child: Text(
-              '请上传图片以供识别',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
+                  child: Text(
+                    '请上传图片以供识别',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
           if (isPredicting)
             const Center(
               child: CircularProgressIndicator(),
@@ -146,7 +152,7 @@ class _PredictScreenState extends State<PredictScreen> {
       ),
     );
   }
-  
+
   Future<void> _takePhoto() async {
     XFile? photo;
     try {
@@ -166,7 +172,7 @@ class _PredictScreenState extends State<PredictScreen> {
       startNewPredict(photo);
     }
   }
-  
+
   Future<void> _pickPhoto() async {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 

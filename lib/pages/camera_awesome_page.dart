@@ -52,7 +52,7 @@ class CameraPage extends StatelessWidget {
                 {
                   for (final sensor in sensors)
                     sensor:
-                    '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
+                        '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
                 },
               );
             },

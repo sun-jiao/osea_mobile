@@ -31,7 +31,8 @@ class PredictResult {
       return;
     }
 
-    final String birdInfoJson = await rootBundle.loadString('assets/labels/bird_info.json');
+    final String birdInfoJson =
+        await rootBundle.loadString('assets/labels/bird_info.json');
     speciesInfo = json.decode(birdInfoJson);
   }
 }
