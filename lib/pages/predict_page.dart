@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:birdid/pages/manually_crop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
@@ -55,7 +56,18 @@ class _PredictScreenState extends State<PredictScreen> {
 
     final birds = objDetect.where((e) => e.className == "bird").toList();
 
-    if (birds.isNotEmpty) {
+    if (birds.isEmpty){
+      if (mounted) {
+        final crop = await Navigator.push(context,
+            MaterialPageRoute(builder: (context) => CropPage(imageData: file)));
+
+        if (crop is Uint8List) {
+          setState(() {
+            image = crop;
+          });
+        }
+      }
+    } else {
       file = await tools.cropImage(file, birds.first.rect) ?? file;
 
       setState(() {
