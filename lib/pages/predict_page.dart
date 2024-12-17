@@ -85,36 +85,14 @@ class _PredictScreenState extends State<PredictScreen> {
         onPressed: () {},
         icon: IconButton(
           icon: const Icon(Icons.image),
-          onPressed: () async {
-            final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-            if (image != null) {
-              startNewPredict(image);
-            }
-          },
+          onPressed: _pickPhoto,
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(100)),
         ),
         label: IconButton(
           icon: const Icon(Icons.camera),
-          onPressed: () async {
-            XFile? photo;
-            try {
-              photo = await picker.pickImage(source: ImageSource.camera);
-            } catch (e) {
-              if (context.mounted) {
-                photo = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CameraPage()),
-                );
-              }
-            }
-
-            if (photo != null) {
-              startNewPredict(photo);
-            }
-          },
+          onPressed: _takePhoto,
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -155,5 +133,33 @@ class _PredictScreenState extends State<PredictScreen> {
         ],
       ),
     );
+  }
+  
+  Future<void> _takePhoto() async {
+    XFile? photo;
+    try {
+      // call device stock camera
+      photo = await picker.pickImage(source: ImageSource.camera);
+    } catch (e) {
+      // if stock camera is unavailable, use built-in camera
+      if (mounted) {
+        photo = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CameraPage()),
+        );
+      }
+    }
+
+    if (photo != null) {
+      startNewPredict(photo);
+    }
+  }
+  
+  Future<void> _pickPhoto() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      startNewPredict(image);
+    }
   }
 }
