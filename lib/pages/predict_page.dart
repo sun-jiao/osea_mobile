@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +12,7 @@ import '../widgets/predict_tile.dart';
 import 'camera_awesome_page.dart';
 
 final ImagePicker picker = ImagePicker();
+const _bird = 14;
 
 class PredictScreen extends StatefulWidget {
   const PredictScreen({super.key});
@@ -21,27 +23,52 @@ class PredictScreen extends StatefulWidget {
 
 class _PredictScreenState extends State<PredictScreen> {
   static ClassificationModel? classificationModel;
+  static ModelObjectDetection? objectModel;
 
   List<PredictResult> topResults = [];
   String imagePath = '';
+  Uint8List image = Uint8List(0);
 
   bool isPredicting = false;
 
   startNewPredict(XFile result) async {
-    String? path = result.path;
+    String path = result.path;
     setState(() {
       // 清空上次的识别结果
       topResults.clear();
       imagePath = path;
     });
 
-    while (classificationModel == null) {
-      classificationModel = await PytorchLite.loadClassificationModel(
-          "assets/models/bird_model.pt", 224, 224, 11000,
-          labelPath: "assets/labels/fake_labels.txt");
+    var file = await File(imagePath).readAsBytes();
+
+    setState(() {
+      image = file;
+    });
+
+    while (objectModel == null) {
+      objectModel = await PytorchLite.loadObjectDetectionModel(
+          "assets/models/yolo11n.pt", 80, 640, 640,
+          objectDetectionModelType: ObjectDetectionModelType.yolov8);
     }
 
-    List<double> prediction = await classificationModel!.getImagePredictionList(await File(imagePath).readAsBytes());
+    List<ResultObjectDetection> objDetect = await objectModel!.getImagePrediction(file);
+
+    final birds = objDetect.where((e) => e.classIndex == _bird).toList();
+
+    if (birds.isNotEmpty) {
+      file = await tools.cropImage(file, birds.first.rect) ?? file;
+
+      setState(() {
+        image = file;
+      });
+    }
+
+    while (classificationModel == null) {
+      classificationModel = await PytorchLite.loadClassificationModel(
+          "assets/models/bird_model.pt", 224, 224, 11000);
+    }
+
+    List<double> prediction = await classificationModel!.getImagePredictionList(file);
 
     setState(() {
       topResults = tools.getTop(tools.softmax(prediction));
@@ -101,7 +128,7 @@ class _PredictScreenState extends State<PredictScreen> {
                     AspectRatio(
                       aspectRatio: 1,
                       child: BlurredImageWidget(
-                        imageProvider: FileImage(File(imagePath)),
+                        imageProvider: MemoryImage(image),
                       ),
                     ),
                     Card(

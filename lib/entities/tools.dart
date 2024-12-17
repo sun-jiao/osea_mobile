@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:birdid/entities/predict_result.dart';
+import 'package:pytorch_lite/pigeon.dart';
+import 'package:image/image.dart' as img;
 
 // convert predict result to probabilities
 // take the Python code in Chinese Wikipedia as a reference:
@@ -19,4 +22,24 @@ List<PredictResult> getTop(List<double> probs, {int amount = 3, bool hideLowProb
   List<MapEntry<int, double>> filteredList = sortedList.where((e) => !hideLowProb || e.value > lowestValue).toList();
 
   return filteredList.take(amount).map((e) => PredictResult(e.key, e.value)).toList();
+}
+
+Future<Uint8List?> cropImage(Uint8List imageData, PyTorchRect rect) async {
+  final decoded = img.decodeImage(imageData);
+
+  if (decoded == null) {
+    return null;
+  }
+
+  final int imageWidth = decoded.width;
+  final int imageHeight = decoded.height;
+
+  final int left = (imageWidth * rect.left).floor();
+  final int width = (imageWidth * rect.width).floor();
+  final int top = (imageHeight * rect.top).floor();
+  final int height = (imageHeight * rect.height).floor();
+
+  final cropped = img.copyCrop(decoded, x: left, y: top, width: width, height: height);
+
+  return Uint8List.fromList(img.encodePng(cropped));
 }

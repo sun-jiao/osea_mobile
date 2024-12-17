@@ -35,7 +35,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   camerawesome: ^2.1.0
+  image: any
   image_picker: ^1.1.2
+  path_provider: any
   pytorch_lite: ^4.3.0
 
 dev_dependencies:
@@ -62,10 +64,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/labels/fake_labels.txt
-    - assets/labels/bird_info.json
-    - assets/models/bird_model.pt
-    - assets/models/yolo11n.pt
+    - assets/labels/
+    - assets/models/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
