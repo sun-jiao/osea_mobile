@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:birdid/pages/manually_crop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pytorch_lite/pytorch_lite.dart';
 
+import '../entities/ai_tools.dart';
 import '../entities/predict_result.dart';
 import '../entities/tools.dart' as tools;
 import '../widgets/blured_image.dart';
@@ -22,74 +21,16 @@ class PredictScreen extends StatefulWidget {
 }
 
 class _PredictScreenState extends State<PredictScreen> {
-  static ClassificationModel? classificationModel;
-  static ModelObjectDetection? objectModel;
-
   List<PredictResult> topResults = [];
-  String imagePath = '';
+  
+  // the complete image file
+  Uint8List file = Uint8List(0);
+  
+  // part of the complete image, used for identification,
+  // cropped by user or automatically cropped based on yolo detection
   Uint8List image = Uint8List(0);
 
   bool isPredicting = false;
-
-  startNewPredict(XFile result) async {
-    String path = result.path;
-    setState(() {
-      // 清空上次的识别结果
-      topResults.clear();
-      imagePath = path;
-      isPredicting = true;
-    });
-
-    var file = await File(imagePath).readAsBytes();
-
-    setState(() {
-      image = file;
-    });
-
-    while (objectModel == null) {
-      objectModel = await PytorchLite.loadObjectDetectionModel(
-          "assets/models/yolo11n.pt", 80, 640, 640,
-          labelPath: "assets/labels/yolo_labels.txt",
-          objectDetectionModelType: ObjectDetectionModelType.yolov8);
-    }
-
-    List<ResultObjectDetection> objDetect =
-        await objectModel!.getImagePrediction(file);
-
-    final birds = objDetect.where((e) => e.className == "bird").toList();
-
-    if (birds.isEmpty) {
-      if (mounted) {
-        final crop = await Navigator.push(context,
-            MaterialPageRoute(builder: (context) => CropPage(imageData: file)));
-
-        if (crop is Uint8List) {
-          setState(() {
-            image = crop;
-          });
-        }
-      }
-    } else {
-      file = await tools.cropImage(file, birds.first.rect) ?? file;
-
-      setState(() {
-        image = file;
-      });
-    }
-
-    while (classificationModel == null) {
-      classificationModel = await PytorchLite.loadClassificationModel(
-          "assets/models/bird_model.pt", 224, 224, 11000);
-    }
-
-    List<double> prediction =
-        await classificationModel!.getImagePredictionList(file);
-
-    setState(() {
-      topResults = tools.getTop(tools.softmax(prediction));
-      isPredicting = false;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,16 +55,28 @@ class _PredictScreenState extends State<PredictScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Stack(
         children: [
-          imagePath.isNotEmpty
+          image.isNotEmpty
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: BlurredImageWidget(
-                        imageProvider: MemoryImage(image),
-                      ),
+                    Stack(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: BlurredImageWidget(
+                            imageProvider: MemoryImage(image),
+                          ),
+                        ),
+                        Positioned(
+                          right: 4,
+                          bottom: 4,
+                          child: IconButton.filled(
+                            onPressed: _reCropImage,
+                            icon: Icon(Icons.crop_rounded),
+                          ),
+                        ),
+                      ],
                     ),
                     Card(
                       margin: const EdgeInsets.all(16),
@@ -169,7 +122,7 @@ class _PredictScreenState extends State<PredictScreen> {
     }
 
     if (photo != null) {
-      startNewPredict(photo);
+      _startNewPredict(photo);
     }
   }
 
@@ -177,7 +130,60 @@ class _PredictScreenState extends State<PredictScreen> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      startNewPredict(image);
+      _startNewPredict(image);
     }
+  }
+  
+  void _startProcess() {
+    setState(() {
+      // clear previous id result
+      topResults.clear();
+      isPredicting = true;
+    });
+  }
+
+  void _endProcess(List<PredictResult> results) {
+    setState(() {
+      topResults = results;
+      isPredicting = false;
+    });
+  }
+
+  void _startNewPredict(XFile xFile) async {
+    _startProcess();
+    file = await File(xFile.path).readAsBytes();
+    final birds = await AiTools.birdDetect(file);
+    final Uint8List crop;
+
+    if (birds.isNotEmpty) {
+      crop = await tools.autoCrop(file, birds.first.rect) ?? file;
+    } else if (mounted) {
+      crop = (await tools.manuallyCrop(context, file)) ?? file;
+    } else {
+      return;
+    }
+
+    setState(() {
+      image = crop;
+    });
+
+    List<double> prediction = await AiTools.birdID(image);
+    _endProcess(tools.getTop(tools.softmax(prediction)));
+  }
+  
+  Future<void> _reCropImage() async {
+    _startProcess();
+
+    final Uint8List? crop = await tools.manuallyCrop(context, file);
+
+    if (crop is Uint8List) {
+      setState(() {
+        image = crop;
+      });
+    }
+
+    List<double> prediction = await AiTools.birdID(image);
+
+    _endProcess(tools.getTop(tools.softmax(prediction)));
   }
 }

@@ -2,8 +2,11 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:birdid/entities/predict_result.dart';
+import 'package:flutter/material.dart';
 import 'package:pytorch_lite/pigeon.dart';
 import 'package:image/image.dart' as img;
+
+import '../pages/manually_crop_page.dart';
 
 // convert predict result to probabilities
 // take the Python code in Chinese Wikipedia as a reference:
@@ -33,7 +36,7 @@ List<PredictResult> getTop(List<double> probs, {
       .toList();
 }
 
-Future<Uint8List?> cropImage(Uint8List imageData, PyTorchRect rect) async {
+Future<Uint8List?> autoCrop(Uint8List imageData, PyTorchRect rect) async {
   final decoded = img.decodeImage(imageData);
 
   if (decoded == null) {
@@ -52,4 +55,15 @@ Future<Uint8List?> cropImage(Uint8List imageData, PyTorchRect rect) async {
       img.copyCrop(decoded, x: left, y: top, width: width, height: height);
 
   return Uint8List.fromList(img.encodePng(cropped));
+}
+
+Future<Uint8List?> manuallyCrop(BuildContext context, Uint8List file) async {
+  final crop = await Navigator.push(context,
+      MaterialPageRoute(builder: (context) => CropPage(imageData: file)));
+
+  if (crop is Uint8List) {
+    return crop;
+  } else {
+    return null;
+  }
 }
