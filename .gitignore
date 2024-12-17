@@ -50,3 +50,4 @@ pubspec.lock
 *.torchscript
 *.pt
 assets/labels/bird_info.json
+assets/labels/yolo_labels.txt

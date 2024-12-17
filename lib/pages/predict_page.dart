@@ -12,7 +12,6 @@ import '../widgets/predict_tile.dart';
 import 'camera_awesome_page.dart';
 
 final ImagePicker picker = ImagePicker();
-const _bird = 14;
 
 class PredictScreen extends StatefulWidget {
   const PredictScreen({super.key});
@@ -48,12 +47,13 @@ class _PredictScreenState extends State<PredictScreen> {
     while (objectModel == null) {
       objectModel = await PytorchLite.loadObjectDetectionModel(
           "assets/models/yolo11n.pt", 80, 640, 640,
+          labelPath: "assets/labels/yolo_labels.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
     }
 
     List<ResultObjectDetection> objDetect = await objectModel!.getImagePrediction(file);
 
-    final birds = objDetect.where((e) => e.classIndex == _bird).toList();
+    final birds = objDetect.where((e) => e.className == "bird").toList();
 
     if (birds.isNotEmpty) {
       file = await tools.cropImage(file, birds.first.rect) ?? file;
