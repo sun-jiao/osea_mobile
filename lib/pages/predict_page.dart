@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pytorch_lite/lib.dart';
 
 import '../entities/ai_tools.dart';
 import '../entities/predict_result.dart';
@@ -21,16 +22,18 @@ class PredictScreen extends StatefulWidget {
 }
 
 class _PredictScreenState extends State<PredictScreen> {
-  List<PredictResult> topResults = [];
+  List<PredictResult> _topResults = [];
+  List<ResultObjectDetection> _yoloResults = [];
+  int _yoloIndex = 0;
   
   // the complete image file
-  Uint8List file = Uint8List(0);
+  Uint8List _file = Uint8List(0);
   
   // part of the complete image, used for identification,
   // cropped by user or automatically cropped based on yolo detection
-  Uint8List image = Uint8List(0);
+  Uint8List _image = Uint8List(0);
 
-  bool isPredicting = false;
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +58,7 @@ class _PredictScreenState extends State<PredictScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Stack(
         children: [
-          image.isNotEmpty
+          _image.isNotEmpty
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.max,
@@ -65,8 +68,8 @@ class _PredictScreenState extends State<PredictScreen> {
                         AspectRatio(
                           aspectRatio: 1,
                           child: BlurredImageWidget(
-                            imageProvider: MemoryImage(image),
-                            backProvider: MemoryImage(file),
+                            imageProvider: MemoryImage(_image),
+                            backProvider: MemoryImage(_file),
                           ),
                         ),
                         Positioned(
@@ -77,6 +80,36 @@ class _PredictScreenState extends State<PredictScreen> {
                             icon: Icon(Icons.crop_rounded),
                           ),
                         ),
+                        if (_yoloIndex > 0)
+                          Positioned(
+                            left: 4,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton.filled(
+                                onPressed: () {
+                                  _yoloIndex--;
+                                  _switchCrop();
+                                },
+                                icon: Icon(Icons.arrow_left_rounded),
+                              ),
+                            ),
+                          ),
+                        if (_yoloIndex < _yoloResults.length - 1)
+                          Positioned(
+                            right: 4,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton.filled(
+                                onPressed: () {
+                                  _yoloIndex++;
+                                  _switchCrop();
+                                },
+                                icon: Icon(Icons.arrow_right_rounded),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     Card(
@@ -85,7 +118,7 @@ class _PredictScreenState extends State<PredictScreen> {
                       surfaceTintColor: Colors.white,
                       shadowColor: Colors.transparent,
                       child: Column(
-                        children: topResults
+                        children: _topResults
                             .map((e) => ResultTile(result: e))
                             .toList(),
                       ),
@@ -98,7 +131,7 @@ class _PredictScreenState extends State<PredictScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-          if (isPredicting)
+          if (_isProcessing)
             const Center(
               child: CircularProgressIndicator(),
             ),
@@ -138,53 +171,73 @@ class _PredictScreenState extends State<PredictScreen> {
   void _startProcess() {
     setState(() {
       // clear previous id result
-      topResults.clear();
-      isPredicting = true;
+      _topResults.clear();
+      _isProcessing = true;
     });
   }
 
   void _endProcess(List<PredictResult> results) {
     setState(() {
-      topResults = results;
-      isPredicting = false;
+      _topResults = results;
+      _isProcessing = false;
     });
   }
 
   void _startNewPredict(XFile xFile) async {
     _startProcess();
-    file = await File(xFile.path).readAsBytes();
-    final birds = await AiTools.birdDetect(file);
+    _file = await File(xFile.path).readAsBytes();
+    _yoloResults = await AiTools.birdDetect(_file);
+    _yoloIndex = 0;
     final Uint8List crop;
 
-    if (birds.isNotEmpty) {
-      crop = await tools.autoCrop(file, birds.first.rect) ?? file;
+    if (_yoloResults.isNotEmpty) {
+      crop = await tools.autoCrop(_file, _yoloResults[_yoloIndex].rect) ?? _file;
     } else if (mounted) {
-      crop = (await tools.manuallyCrop(context, file)) ?? file;
+      crop = (await tools.manuallyCrop(context, _file)) ?? _file;
     } else {
       return;
     }
 
     setState(() {
-      image = crop;
+      _image = crop;
     });
 
-    List<double> prediction = await AiTools.birdID(image);
+    List<double> prediction = await AiTools.birdID(_image);
     _endProcess(tools.getTop(tools.softmax(prediction)));
   }
   
   Future<void> _reCropImage() async {
     _startProcess();
 
-    final Uint8List? crop = await tools.manuallyCrop(context, file);
+    final Uint8List? crop = await tools.manuallyCrop(context, _file);
 
     if (crop is Uint8List) {
       setState(() {
-        image = crop;
+        _image = crop;
       });
     }
 
-    List<double> prediction = await AiTools.birdID(image);
+    List<double> prediction = await AiTools.birdID(_image);
 
+    _endProcess(tools.getTop(tools.softmax(prediction)));
+
+    _yoloIndex = -1;
+  }
+
+  Future<void> _switchCrop() async {
+    if (_yoloResults.isEmpty) {
+      return;
+    }
+
+    _startProcess();
+
+    final crop = await tools.autoCrop(_file, _yoloResults[_yoloIndex].rect) ?? _file;
+
+    setState(() {
+      _image = crop;
+    });
+
+    List<double> prediction = await AiTools.birdID(_image);
     _endProcess(tools.getTop(tools.softmax(prediction)));
   }
 }
