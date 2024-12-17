@@ -36,9 +36,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   camerawesome: ^2.1.0
   crop_your_image: ^2.0.0
-  image: any
+  image: ^4.5.0
   image_picker: ^1.1.2
-  path_provider: any
+  path_provider: ^2.1.5
   pytorch_lite: ^4.3.0
 
 dev_dependencies:
