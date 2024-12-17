@@ -49,5 +49,4 @@ pubspec.lock
 *.mlmodel
 *.torchscript
 *.pt
-assets/labels/fake_labels.txt
 assets/labels/bird_info.json
