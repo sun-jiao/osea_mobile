@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 class BlurredImageWidget extends StatelessWidget {
   final ImageProvider imageProvider;
+  final ImageProvider backProvider;
   final double margin;
 
   const BlurredImageWidget({
     super.key,
     required this.imageProvider,
+    required this.backProvider,
     this.margin = 12.0,
   });
 
@@ -20,7 +22,7 @@ class BlurredImageWidget extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: imageProvider,
+                image: backProvider,
                 fit: BoxFit.cover,
               ),
             ),

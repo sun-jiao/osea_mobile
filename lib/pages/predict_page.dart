@@ -66,6 +66,7 @@ class _PredictScreenState extends State<PredictScreen> {
                           aspectRatio: 1,
                           child: BlurredImageWidget(
                             imageProvider: MemoryImage(image),
+                            backProvider: MemoryImage(file),
                           ),
                         ),
                         Positioned(
