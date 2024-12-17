@@ -2,12 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/lib.dart';
 
 import '../entities/ai_tools.dart';
+import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
 import '../entities/tools.dart' as tools;
+import '../pages/settings_page.dart';
 import '../widgets/blured_image.dart';
 import '../widgets/predict_tile.dart';
 import 'camera_awesome_page.dart';
@@ -39,7 +42,15 @@ class _PredictScreenState extends State<PredictScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bird ID'),
+        title: Text(AppLocale.title.getString(context)),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
+            },
+            icon: Icon(Icons.more_vert_rounded),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
@@ -125,9 +136,9 @@ class _PredictScreenState extends State<PredictScreen> {
                     ),
                   ],
                 )
-              : const Center(
+              : Center(
                   child: Text(
-                    '请上传图片以供识别',
+                    AppLocale.imgNeeded.getString(context),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
