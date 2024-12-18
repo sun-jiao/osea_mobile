@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:birdid/entities/shared_pref_tool.dart';
 import 'package:flutter/services.dart';
 
 class PredictResult {
@@ -12,7 +13,8 @@ class PredictResult {
 
   String get label {
     try {
-      return speciesInfo[cls][0];
+      // default English common name
+      return speciesInfo[cls][SharedPrefTool.cnLanguage == 'zh' ? 0 : 1];
     } catch (e) {
       return cls.toString();
     }
@@ -26,7 +28,7 @@ class PredictResult {
     }
   }
 
-  static loadSpeciesInfo() async {
+  static Future<void> loadSpeciesInfo() async {
     if (speciesInfo.isNotEmpty) {
       return;
     }

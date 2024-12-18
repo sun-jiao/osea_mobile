@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:birdid/entities/predict_result.dart';
 import 'package:flutter/material.dart';
 import 'package:pytorch_lite/pigeon.dart';
 import 'package:image/image.dart' as img;
 
+import '../entities/predict_result.dart';
 import '../pages/manually_crop_page.dart';
 
 // convert predict result to probabilities
