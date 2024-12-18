@@ -34,3 +34,8 @@ mixin AppLocale {
     nameBoth: '二者均显示',
   };
 }
+
+const Map<String, String> languageMap = {
+  'en': 'English',
+  'zh': '中文',
+};

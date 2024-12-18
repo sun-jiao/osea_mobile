@@ -5,12 +5,16 @@ import 'package:flutter_localization/flutter_localization.dart';
 
 import 'entities/localization_mixin.dart';
 import 'entities/predict_result.dart';
+import 'entities/shared_pref_tool.dart';
 import 'pages/predict_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterLocalization.instance.ensureInitialized();
-  await PredictResult.loadSpeciesInfo();
+  await Future.wait([
+    FlutterLocalization.instance.ensureInitialized(),
+    PredictResult.loadSpeciesInfo(),
+    SharedPrefTool.loadSettings(),
+  ]);
   runApp(const MyApp());
 }
 
@@ -40,7 +44,7 @@ class _MyAppState extends State<MyApp> {
       initLanguageCode: 'en',
     );
     _localization.onTranslatedLanguage = _onTranslatedLanguage;
-    _localization.translate(Platform.localeName.split(RegExp('[_-]')).first);
+    _localization.translate(SharedPrefTool.uiLanguage);
     super.initState();
   }
 

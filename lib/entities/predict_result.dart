@@ -26,7 +26,7 @@ class PredictResult {
     }
   }
 
-  static loadSpeciesInfo() async {
+  static Future<void> loadSpeciesInfo() async {
     if (speciesInfo.isNotEmpty) {
       return;
     }
