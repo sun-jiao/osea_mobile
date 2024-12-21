@@ -3,19 +3,18 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:onnxruntime/onnxruntime.dart';
-import 'package:pytorch_lite/pytorch_lite.dart';
 import 'package:image/image.dart' as img;
 
 import 'detection_result.dart';
 
 class AiTools {
-  static ClassificationModel? _classifyModel;
-  static OrtSession? _classifyModelOnnx;
+  static OrtSession? _classifyModel;
   static OrtSession? _detectModel;
 
   static Future<void> _initDetectModel() async {
     final sessionOptions = OrtSessionOptions();
-    final rawAssetFile = await rootBundle.load("assets/models/ssd_mobilenet.onnx");
+    final rawAssetFile =
+        await rootBundle.load("assets/models/ssd_mobilenet.onnx");
     final bytes = rawAssetFile.buffer.asUint8List();
     _detectModel = OrtSession.fromBuffer(bytes, sessionOptions);
   }
@@ -43,27 +42,19 @@ class AiTools {
       element?.release();
     }
 
-    return List.generate(count.toInt(), (i) => DetectionResult(boxes[i], classes[i].toInt(), scores[i]));
+    return List.generate(count.toInt(),
+        (i) => DetectionResult(boxes[i], classes[i].toInt(), scores[i]));
   }
-
-  static Future<List<double>> birdID(Uint8List image) async {
-    while (_classifyModel == null) {
-      _classifyModel = await PytorchLite.loadClassificationModel(
-          "assets/models/bird_model.pt", 224, 224, 11000);
-    }
-
-    return await _classifyModel!.getImagePredictionList(image);
-  }
-
+  
   static Future<void> _initClassifyModel() async {
     final sessionOptions = OrtSessionOptions();
     final rawAssetFile = await rootBundle.load("assets/models/bird_model.onnx");
     final bytes = rawAssetFile.buffer.asUint8List();
-    _classifyModelOnnx = OrtSession.fromBuffer(bytes, sessionOptions);
+    _classifyModel = OrtSession.fromBuffer(bytes, sessionOptions);
   }
 
-  static Future<List<double>> birdIDOnnx(Uint8List image0) async {
-    while (_classifyModelOnnx == null) {
+  static Future<List<double>> birdID(Uint8List image0) async {
+    while (_classifyModel == null) {
       await _initClassifyModel();
     }
 
@@ -74,16 +65,12 @@ class AiTools {
     final inputTensor = Float32List.fromList(rgbaTensor);
     final shape = [1, 3, 224, 224];
 
-    final inputOrt = OrtValueTensor.createTensorWithDataList(inputTensor, shape);
+    final inputOrt =
+        OrtValueTensor.createTensorWithDataList(inputTensor, shape);
 
-    final sessionOptions = OrtSessionOptions();
-    final rawAssetFile = await rootBundle.load("assets/models/bird_model.onnx");
-    final bytes = rawAssetFile.buffer.asUint8List();
-    final session = OrtSession.fromBuffer(bytes, sessionOptions);
-
-    final inputs = {session.inputNames[0]: inputOrt};
+    final inputs = {_classifyModel!.inputNames[0]: inputOrt};
     final runOptions = OrtRunOptions();
-    final outputs = await session.runAsync(runOptions, inputs);
+    final outputs = await _classifyModel!.runAsync(runOptions, inputs);
     inputOrt.release();
     runOptions.release();
     final result = (outputs![0]!.value as List);
@@ -93,15 +80,23 @@ class AiTools {
     return result[0] as List<double>;
   }
 
-  static Future<List<double>> _imageToFloatTensor(img.Image image) async {
+  static Future<List<double>> _imageToFloatTensor(img.Image image,
+      {List<double> mean = const [0.485, 0.456, 0.406],
+      List<double> std = const [0.229, 0.224, 0.225]}) async {
     final imageAsFloatBytes = image.getBytes(order: img.ChannelOrder.rgba);
     final rgbaUints = Uint8List.view(imageAsFloatBytes.buffer);
 
     final indexed = rgbaUints.indexed;
     return [
-      ...indexed.where((e) => e.$1 % 4 == 0).map((e) => e.$2.toDouble()),
-      ...indexed.where((e) => e.$1 % 4 == 1).map((e) => e.$2.toDouble()),
-      ...indexed.where((e) => e.$1 % 4 == 2).map((e) => e.$2.toDouble()),
+      ...indexed
+          .where((e) => e.$1 % 4 == 0)
+          .map((e) => (e.$2.toDouble() / 255 - mean[0]) / std[0]),
+      ...indexed
+          .where((e) => e.$1 % 4 == 1)
+          .map((e) => (e.$2.toDouble() / 255 - mean[1]) / std[1]),
+      ...indexed
+          .where((e) => e.$1 % 4 == 2)
+          .map((e) => (e.$2.toDouble() / 255 - mean[2]) / std[2]),
     ];
   }
 }
