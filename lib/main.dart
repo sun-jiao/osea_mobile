@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:onnxruntime/onnxruntime.dart';
 
 import 'entities/localization_mixin.dart';
 import 'entities/predict_result.dart';
@@ -10,6 +9,7 @@ import 'pages/predict_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  OrtEnv.instance.init();
   await Future.wait([
     FlutterLocalization.instance.ensureInitialized(),
     PredictResult.loadSpeciesInfo(),
@@ -46,6 +46,12 @@ class _MyAppState extends State<MyApp> {
     _localization.onTranslatedLanguage = _onTranslatedLanguage;
     _localization.translate(SharedPrefTool.uiLanguage);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    OrtEnv.instance.release();
+    super.dispose();
   }
 
   void _onTranslatedLanguage(Locale? locale) {

@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pytorch_lite/lib.dart';
 
 import '../entities/ai_tools.dart';
+import '../entities/detection_result.dart';
 import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
 import '../entities/tools.dart' as tools;
@@ -25,10 +25,12 @@ class PredictScreen extends StatefulWidget {
 }
 
 class _PredictScreenState extends State<PredictScreen> {
+  static const int _birdIndex = 16;
+
   List<PredictResult> _topResults = [];
-  List<ResultObjectDetection> _yoloResults = [];
-  int _yoloIndex = 0;
-  
+  List<DetectionResult> _detectionResults = [];
+  int _objIndex = 0;
+
   // the complete image file
   Uint8List _file = Uint8List(0);
   
@@ -91,7 +93,7 @@ class _PredictScreenState extends State<PredictScreen> {
                             icon: Icon(Icons.crop_rounded),
                           ),
                         ),
-                        if (_yoloIndex > 0)
+                        if (_objIndex > 0)
                           Positioned(
                             left: 4,
                             top: 0,
@@ -99,14 +101,14 @@ class _PredictScreenState extends State<PredictScreen> {
                             child: Center(
                               child: IconButton.filled(
                                 onPressed: () {
-                                  _yoloIndex--;
+                                  _objIndex--;
                                   _switchCrop();
                                 },
                                 icon: Icon(Icons.arrow_left_rounded),
                               ),
                             ),
                           ),
-                        if (_yoloIndex < _yoloResults.length - 1)
+                        if (_objIndex < _detectionResults.length - 1)
                           Positioned(
                             right: 4,
                             top: 0,
@@ -114,7 +116,7 @@ class _PredictScreenState extends State<PredictScreen> {
                             child: Center(
                               child: IconButton.filled(
                                 onPressed: () {
-                                  _yoloIndex++;
+                                  _objIndex++;
                                   _switchCrop();
                                 },
                                 icon: Icon(Icons.arrow_right_rounded),
@@ -197,12 +199,12 @@ class _PredictScreenState extends State<PredictScreen> {
   void _startNewPredict(XFile xFile) async {
     _startProcess();
     _file = await File(xFile.path).readAsBytes();
-    _yoloResults = await AiTools.birdDetect(_file);
-    _yoloIndex = 0;
+    _detectionResults = (await AiTools.birdDetect(_file)).where((e) => e.cls == _birdIndex).toList();
+    _objIndex = 0;
     final Uint8List crop;
 
-    if (_yoloResults.isNotEmpty) {
-      crop = await tools.autoCrop(_file, _yoloResults[_yoloIndex].rect) ?? _file;
+    if (_detectionResults.isNotEmpty) {
+      crop = await tools.autoCrop(_file, _detectionResults[_objIndex].box) ?? _file;
     } else if (mounted) {
       crop = (await tools.manuallyCrop(context, _file)) ?? _file;
     } else {
@@ -232,17 +234,17 @@ class _PredictScreenState extends State<PredictScreen> {
 
     _endProcess(tools.getTop(tools.softmax(prediction)));
 
-    _yoloIndex = -1;
+    _objIndex = -1;
   }
 
   Future<void> _switchCrop() async {
-    if (_yoloResults.isEmpty) {
+    if (_detectionResults.isEmpty) {
       return;
     }
 
     _startProcess();
 
-    final crop = await tools.autoCrop(_file, _yoloResults[_yoloIndex].rect) ?? _file;
+    final crop = await tools.autoCrop(_file, _detectionResults[_objIndex].box) ?? _file;
 
     setState(() {
       _image = crop;

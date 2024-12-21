@@ -2,11 +2,11 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pytorch_lite/pigeon.dart';
 import 'package:image/image.dart' as img;
 
 import '../entities/predict_result.dart';
 import '../pages/manually_crop_page.dart';
+import 'detection_result.dart';
 
 // convert predict result to probabilities
 // take the Python code in Chinese Wikipedia as a reference:
@@ -36,7 +36,7 @@ List<PredictResult> getTop(List<double> probs, {
       .toList();
 }
 
-Future<Uint8List?> autoCrop(Uint8List imageData, PyTorchRect rect) async {
+Future<Uint8List?> autoCrop(Uint8List imageData, DetectionBox box) async {
   final decoded = img.decodeImage(imageData);
 
   if (decoded == null) {
@@ -46,10 +46,10 @@ Future<Uint8List?> autoCrop(Uint8List imageData, PyTorchRect rect) async {
   final int imageWidth = decoded.width;
   final int imageHeight = decoded.height;
 
-  final int left = (imageWidth * rect.left).floor();
-  final int width = (imageWidth * rect.width).floor();
-  final int top = (imageHeight * rect.top).floor();
-  final int height = (imageHeight * rect.height).floor();
+  final int left = (imageWidth * box.left).floor();
+  final int width = (imageWidth * box.width).floor();
+  final int top = (imageHeight * box.top).floor();
+  final int height = (imageHeight * box.height).floor();
 
   final cropped =
       img.copyCrop(decoded, x: left, y: top, width: width, height: height);
