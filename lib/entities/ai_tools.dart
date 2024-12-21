@@ -13,8 +13,7 @@ class AiTools {
 
   static Future<void> _initDetectModel() async {
     final sessionOptions = OrtSessionOptions();
-    final rawAssetFile =
-        await rootBundle.load("assets/models/ssd_mobilenet.onnx");
+    final rawAssetFile = await rootBundle.load("assets/models/ssd_mobilenet.onnx");
     final bytes = rawAssetFile.buffer.asUint8List();
     _detectModel = OrtSession.fromBuffer(bytes, sessionOptions);
   }
@@ -65,8 +64,7 @@ class AiTools {
     final inputTensor = Float32List.fromList(rgbaTensor);
     final shape = [1, 3, 224, 224];
 
-    final inputOrt =
-        OrtValueTensor.createTensorWithDataList(inputTensor, shape);
+    final inputOrt = OrtValueTensor.createTensorWithDataList(inputTensor, shape);
 
     final inputs = {_classifyModel!.inputNames[0]: inputOrt};
     final runOptions = OrtRunOptions();
