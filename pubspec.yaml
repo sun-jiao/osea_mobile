@@ -39,8 +39,8 @@ dependencies:
   flutter_localization: ^0.3.0
   image: ^4.5.2
   image_picker: ^1.1.2
+  onnxruntime: ^1.4.1
   path_provider: ^2.1.5
-  pytorch_lite: ^4.3.1+1
   shared_preferences: ^2.3.4
 
 dev_dependencies:
