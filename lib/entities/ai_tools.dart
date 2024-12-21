@@ -12,9 +12,9 @@ class AiTools {
   static OrtSession? _detectModel;
 
   static Future<void> _initDetectModel() async {
-    final sessionOptions = OrtSessionOptions();
     final rawAssetFile = await rootBundle.load("assets/models/ssd_mobilenet.onnx");
     final bytes = rawAssetFile.buffer.asUint8List();
+    final sessionOptions = OrtSessionOptions();
     _detectModel = OrtSession.fromBuffer(bytes, sessionOptions);
   }
 
@@ -46,9 +46,9 @@ class AiTools {
   }
   
   static Future<void> _initClassifyModel() async {
-    final sessionOptions = OrtSessionOptions();
     final rawAssetFile = await rootBundle.load("assets/models/bird_model.onnx");
     final bytes = rawAssetFile.buffer.asUint8List();
+    final sessionOptions = OrtSessionOptions();
     _classifyModel = OrtSession.fromBuffer(bytes, sessionOptions);
   }
 
@@ -78,6 +78,7 @@ class AiTools {
     return result[0] as List<double>;
   }
 
+  // normalize image
   static Future<List<double>> _imageToFloatTensor(img.Image image,
       {List<double> mean = const [0.485, 0.456, 0.406],
       List<double> std = const [0.229, 0.224, 0.225]}) async {
