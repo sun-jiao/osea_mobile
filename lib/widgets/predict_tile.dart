@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
+import '../entities/shared_pref_tool.dart';
 
 class ResultTile extends StatelessWidget {
   const ResultTile({super.key, required this.result});
@@ -13,13 +15,13 @@ class ResultTile extends StatelessWidget {
         getIcon(result.prob),
       ),
       title: Text(
-        result.label,
-        style: const TextStyle(fontSize: 18),
+        SharedPrefTool.selectedSpeciesDisplay != AppLocale.scientificName ? result.label : result.scientificName,
+        style: TextStyle(fontSize: 18, fontStyle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.scientificName ? FontStyle.italic : null),
       ),
-      subtitle: Text(
+      subtitle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.nameBoth ? Text(
         result.scientificName,
         style: const TextStyle(fontStyle: FontStyle.italic),
-      ),
+      ) : null,
       trailing: Text('${(result.prob * 100).toStringAsFixed(2)}%'),
     );
   }

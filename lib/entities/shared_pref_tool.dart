@@ -16,7 +16,7 @@ class SharedPrefTool {
       prefs = await SharedPreferences.getInstance();
     }
     
-    selectedSpeciesDisplay = prefs!.getString(AppLocale.nameDisplay) ?? AppLocale.commonName;
+    selectedSpeciesDisplay = prefs!.getString(AppLocale.nameDisplay) ?? AppLocale.nameBoth;
     uiLanguage = prefs!.getString(AppLocale.uiLanguage) ?? Platform.localeName.split(RegExp('[_-]')).first;
     cnLanguage = prefs!.getString(AppLocale.cnLanguage) ?? uiLanguage;
   }

@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:birdid/entities/shared_pref_tool.dart';
 import 'package:flutter/services.dart';
+
+import '../entities/shared_pref_tool.dart';
 
 class PredictResult {
   final int cls;
