@@ -37,11 +37,11 @@ dependencies:
   camerawesome: ^2.1.0
   crop_your_image: ^2.0.0
   flutter_localization: ^0.3.0
-  image: ^4.5.0
+  image: ^4.5.2
   image_picker: ^1.1.2
   path_provider: ^2.1.5
-  pytorch_lite: ^4.3.0
-  shared_preferences: ^2.3.3
+  pytorch_lite: ^4.3.1+1
+  shared_preferences: ^2.3.4
 
 dev_dependencies:
   flutter_test:
