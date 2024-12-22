@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+    <key>NSCameraUsageDescription</key>
+    <string>Take photos when fails in calling </string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>To enable GPS location access for distribution filter</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>To pick image for identification</string>
 </dict>
 </plist>
