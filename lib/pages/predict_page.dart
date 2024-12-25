@@ -68,8 +68,10 @@ class _PredictScreenState extends State<PredictScreen> {
             Navigator
                 .push(context, MaterialPageRoute(builder: (context) => MapPage()))
                 .then((e) {
-                  _endProcess();
-                });
+                  if (_predictions.isNotEmpty) {
+                _endProcess();
+              }
+            });
           },
           icon: Icon(Icons.location_on_rounded),
         ),
@@ -227,6 +229,10 @@ class _PredictScreenState extends State<PredictScreen> {
         final Position? position = await getCurrentLocation(context);
 
         if (position == null) {
+          if (!mounted) {
+            return;
+          }
+
           Fluttertoast.showToast(msg: AppLocale.locationRetrieveFailed.getString(context));
           filtered = _predictions.asMap().entries.toList();
         } else {

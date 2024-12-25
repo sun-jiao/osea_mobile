@@ -39,7 +39,8 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       case AppLocale.locationFilterFix:
         Future.delayed(Duration(milliseconds: 500)).then((e) {
           _setMapCoord(SharedPrefTool.locationFilterLat,
-              SharedPrefTool.locationFilterLng, animate: true);
+              SharedPrefTool.locationFilterLng,
+              animate: true);
         });
         break;
       case AppLocale.locationFilterAuto:
@@ -83,153 +84,164 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocale.locationSelection.getString(context)),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 3,
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: const LatLng(0, 0),
-                initialZoom: 4,
-                maxZoom: 18.0,
-                minZoom: 2,
-                cameraConstraint: const CameraConstraint.unconstrained(),
-                keepAlive: true,
-                initialRotation: 0,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.pinchZoom |
-                      InteractiveFlag.drag |
-                      InteractiveFlag.doubleTapZoom,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        SharedPrefTool.saveSettings();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocale.locationSelection.getString(context)),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              flex: 3,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: const LatLng(0, 0),
+                  initialZoom: 4,
+                  maxZoom: 18.0,
+                  minZoom: 2,
+                  cameraConstraint: const CameraConstraint.unconstrained(),
+                  keepAlive: true,
+                  initialRotation: 0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.pinchZoom |
+                        InteractiveFlag.drag |
+                        InteractiveFlag.doubleTapZoom,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  onTap: (tap, point) {
+                    if (SharedPrefTool.locationFilter !=
+                        AppLocale.locationFilterFix) {
+                      return;
+                    }
+
+                    SharedPrefTool.locationFilterLat = point.latitude;
+                    SharedPrefTool.locationFilterLng = point.longitude;
+
+                    _setMapCoord(point.latitude, point.longitude,
+                        heading: null, animate: true);
+                  },
                 ),
-                backgroundColor: Colors.transparent,
-                onTap: (tap, point) {
-                  if (SharedPrefTool.locationFilter != AppLocale.locationFilterFix) {
-                    return;
-                  }
-
-                  SharedPrefTool.locationFilterLat = point.latitude;
-                  SharedPrefTool.locationFilterLng = point.longitude;
-
-                  _setMapCoord(point.latitude, point.longitude, heading: null, animate: true);
-                },
+                mapController: _mapController,
+                children: [
+                  // rotated children
+                  MapTiles.osm,
+                  LocationMarker(
+                    lat: _lat,
+                    lng: _lng,
+                    heading: _heading,
+                  ),
+                  // non-rotated children
+                  RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution('OpenStreetMap.Fr'),
+                    ],
+                  ),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(0, 20, 15, 0),
+                    alignment: Alignment.topRight,
+                    child: FloatingActionButton.small(
+                      heroTag: Icons.my_location_outlined,
+                      backgroundColor: Colors.white,
+                      onPressed: () =>
+                          {_getCurrentLocation(context, animate: true)},
+                      shape: const CircleBorder(),
+                      child: const IconTheme(
+                        data: IconThemeData(color: Colors.black54),
+                        child: Icon(Icons.my_location_outlined),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white70,
+                          borderRadius: BorderRadius.circular(8)),
+                      padding: _edgeInsets,
+                      margin: _edgeInsets,
+                      transformAlignment: Alignment.bottomLeft,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        direction: Axis.vertical,
+                        children: [
+                          Text(
+                            _locationText(_lat, _lng),
+                            textAlign: TextAlign.left,
+                            key: const Key('location_text'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              mapController: _mapController,
-              children: [
-                // rotated children
-                MapTiles.osm,
-                LocationMarker(
-                  lat: _lat,
-                  lng: _lng,
-                  heading: _heading,
-                ),
-                // non-rotated children
-                RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution('OpenStreetMap.Fr'),
-                  ],
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(0, 20, 15, 0),
-                  alignment: Alignment.topRight,
-                  child: FloatingActionButton.small(
-                    heroTag: Icons.my_location_outlined,
-                    backgroundColor: Colors.white,
-                    onPressed: () =>
-                        {_getCurrentLocation(context, animate: true)},
-                    shape: const CircleBorder(),
-                    child: const IconTheme(
-                      data: IconThemeData(color: Colors.black54),
-                      child: Icon(Icons.my_location_outlined),
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.bottomLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        color: Colors.white70,
-                        borderRadius: BorderRadius.circular(8)),
-                    padding: _edgeInsets,
-                    margin: _edgeInsets,
-                    transformAlignment: Alignment.bottomLeft,
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      runAlignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      direction: Axis.vertical,
-                      children: [
-                        Text(
-                          _locationText(_lat, _lng),
-                          textAlign: TextAlign.left,
-                          key: const Key('location_text'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: ListView(
-              children: [
-                ListTile(
-                  title: Text(AppLocale.locationFilter.getString(context),
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterAuto.getString(context)),
-                  value: AppLocale.locationFilterAuto,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    _getCurrentLocation(context, animate: true);
-                    startSubscription();
-                    setState(() {
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterFix.getString(context)),
-                  value: AppLocale.locationFilterFix,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    stopSubscription();
-                    setState(() {
-                      _setMapCoord(SharedPrefTool.locationFilterLat,
-                          SharedPrefTool.locationFilterLng, animate: true);
+            Expanded(
+              flex: 2,
+              child: ListView(
+                children: [
+                  ListTile(
+                    title: Text(AppLocale.locationFilter.getString(context),
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  RadioListTile<String>(
+                    title:
+                        Text(AppLocale.locationFilterAuto.getString(context)),
+                    value: AppLocale.locationFilterAuto,
+                    groupValue: SharedPrefTool.locationFilter,
+                    onChanged: (value) {
+                      _getCurrentLocation(context, animate: true);
+                      startSubscription();
+                      setState(() {
+                        SharedPrefTool.locationFilter = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text(AppLocale.locationFilterFix.getString(context)),
+                    value: AppLocale.locationFilterFix,
+                    groupValue: SharedPrefTool.locationFilter,
+                    onChanged: (value) {
+                      stopSubscription();
+                      setState(() {
+                        _setMapCoord(SharedPrefTool.locationFilterLat,
+                            SharedPrefTool.locationFilterLng,
+                            animate: true);
 
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterOff.getString(context)),
-                  value: AppLocale.locationFilterOff,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    stopSubscription();
-                    setState(() {
-                      _lat = null;
-                      _lng = null;
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-              ],
+                        SharedPrefTool.locationFilter = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text(AppLocale.locationFilterOff.getString(context)),
+                    value: AppLocale.locationFilterOff,
+                    groupValue: SharedPrefTool.locationFilter,
+                    onChanged: (value) {
+                      stopSubscription();
+                      setState(() {
+                        _lat = null;
+                        _lng = null;
+                        SharedPrefTool.locationFilter = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  void _setMapCoord(double lat, double lng, {double? heading, animate = false}) {
+  void _setMapCoord(double lat, double lng,
+      {double? heading, animate = false}) {
     setState(() {
       _lat = lat;
       _lng = lng;
@@ -244,7 +256,8 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   }
 
   void _setMapLocation(Position locationData, {animate = false}) {
-    _setMapCoord(locationData.latitude, locationData.longitude, heading: locationData.heading, animate: animate);
+    _setMapCoord(locationData.latitude, locationData.longitude,
+        heading: locationData.heading, animate: animate);
   }
 
   Future<void> _getCurrentLocation(BuildContext context,
