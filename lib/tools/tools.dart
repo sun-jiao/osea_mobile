@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 
 import '../entities/predict_result.dart';
 import '../pages/manually_crop_page.dart';
-import 'detection_result.dart';
+import '../entities/detection_result.dart';
 
 // convert predict result to probabilities
 // take the Python code in Chinese Wikipedia as a reference:

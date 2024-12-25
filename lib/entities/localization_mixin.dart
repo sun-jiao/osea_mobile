@@ -10,6 +10,9 @@ mixin AppLocale {
   static const String commonName = 'commonName';
   static const String scientificName = 'scientificName';
   static const String nameBoth = 'nameBoth';
+  static const String locationSelection = 'selectLocation';
+  static const String locationDisabled = 'locationDisabled';
+  static const String locationPermissionDenied = 'locationPermissionDenied';
 
   static const Map<String, dynamic> EN = {
     title: 'Bird ID',
@@ -21,6 +24,9 @@ mixin AppLocale {
     commonName: 'Common name',
     scientificName: 'Scientific name',
     nameBoth: 'Both',
+    locationSelection: 'Location Selection',
+    locationDisabled: "Location services are disabled. Please enable the services",
+    locationPermissionDenied: "Location permissions are permanently denied, we cannot request permissions",
   };
   static const Map<String, dynamic> ZH = {
     title: 'Bird ID',
@@ -32,6 +38,9 @@ mixin AppLocale {
     commonName: '俗名',
     scientificName: '学名',
     nameBoth: '二者均显示',
+    locationSelection: '地点选择',
+    locationDisabled: "定位服务未开启，请开启定位服务",
+    locationPermissionDenied: "位置权限已被永久拒绝，无法请求位置权限",
   };
 }
 

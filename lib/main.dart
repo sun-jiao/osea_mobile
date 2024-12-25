@@ -4,7 +4,9 @@ import 'package:onnxruntime/onnxruntime.dart';
 
 import 'entities/localization_mixin.dart';
 import 'entities/predict_result.dart';
-import 'entities/shared_pref_tool.dart';
+import '../entities/app_dir.dart';
+import '../tools/distribution_tool.dart';
+import 'tools/shared_pref_tool.dart';
 import 'pages/predict_page.dart';
 
 Future<void> main() async {
@@ -14,6 +16,8 @@ Future<void> main() async {
     FlutterLocalization.instance.ensureInitialized(),
     PredictResult.loadSpeciesInfo(),
     SharedPrefTool.loadSettings(),
+    Distribution.initDB(),
+    AppDir.setDir(),
   ]);
   runApp(const MyApp());
 }
@@ -51,6 +55,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     OrtEnv.instance.release();
+    Distribution.closeDB();
     super.dispose();
   }
 

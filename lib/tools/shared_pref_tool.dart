@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'localization_mixin.dart';
+import '../entities/localization_mixin.dart';
 
 class SharedPrefTool {
   static SharedPreferences? prefs;

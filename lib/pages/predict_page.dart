@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../entities/ai_tools.dart';
+import '../tools/ai_tools.dart';
 import '../entities/detection_result.dart';
 import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
-import '../entities/tools.dart' as tools;
+import '../tools/tools.dart' as tools;
 import '../pages/settings_page.dart';
 import '../widgets/blured_image.dart';
 import '../widgets/predict_tile.dart';
 import 'camera_awesome_page.dart';
+import 'map_page.dart';
 
 final ImagePicker picker = ImagePicker();
 
@@ -44,6 +45,7 @@ class _PredictScreenState extends State<PredictScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text(AppLocale.title.getString(context)),
         actions: [
           IconButton(
@@ -53,18 +55,24 @@ class _PredictScreenState extends State<PredictScreen> {
             icon: Icon(Icons.more_vert_rounded),
           ),
         ],
+        leading: IconButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage()));
+          },
+          icon: Icon(Icons.location_on_rounded),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         icon: IconButton(
-          icon: const Icon(Icons.image),
+          icon: const Icon(Icons.image_rounded),
           onPressed: _pickPhoto,
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(100)),
         ),
         label: IconButton(
-          icon: const Icon(Icons.camera),
+          icon: const Icon(Icons.camera_alt_rounded),
           onPressed: _takePhoto,
         ),
       ),

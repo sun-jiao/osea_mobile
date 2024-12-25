@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
-import '../entities/shared_pref_tool.dart';
+import '../tools/shared_pref_tool.dart';
 
 class ResultTile extends StatelessWidget {
   const ResultTile({super.key, required this.result});

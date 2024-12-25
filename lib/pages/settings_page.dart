@@ -3,7 +3,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 
 import 'settings_child_page.dart';
 import '../entities/localization_mixin.dart';
-import '../entities/shared_pref_tool.dart';
+import '../tools/shared_pref_tool.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

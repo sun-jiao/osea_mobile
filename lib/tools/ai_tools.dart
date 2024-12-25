@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:onnxruntime/onnxruntime.dart';
 import 'package:image/image.dart' as img;
 
-import 'detection_result.dart';
+import '../entities/detection_result.dart';
 
 class AiTools {
   static OrtSession? _classifyModel;

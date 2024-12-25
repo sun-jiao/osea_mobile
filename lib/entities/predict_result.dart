@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../entities/shared_pref_tool.dart';
+import '../tools/shared_pref_tool.dart';
 
 class PredictResult {
   final int cls;

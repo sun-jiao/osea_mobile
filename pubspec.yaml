@@ -36,12 +36,19 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   camerawesome: ^2.1.0
   crop_your_image: ^2.0.0
+  device_info_plus: ^11.2.0
   flutter_localization: ^0.3.0
+  flutter_map: ^7.0.2
+  geolocator: ^13.0.2
+  google_api_availability: ^5.0.0
+  latlong2: any
   image: ^4.5.2
   image_picker: ^1.1.2
   onnxruntime: ^1.4.1
+  path: any
   path_provider: ^2.1.5
   shared_preferences: ^2.3.4
+  sqflite: ^2.4.1
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +85,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/db/
     - assets/labels/
     - assets/models/
 
