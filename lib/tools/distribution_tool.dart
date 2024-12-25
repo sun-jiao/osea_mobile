@@ -5,6 +5,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../entities/predict_result.dart';
+
 class Distribution {
   static Database? db;
 
@@ -42,5 +44,11 @@ WHERE p.south <= $lat
   AND p.west <= $lng
 GROUP BY d.species, m.cls;
 ''')).map((m) => int.parse(m['cls'].toString())).toList();
+  }
+
+  static Future<List<MapEntry<int, double>>> getFilteredPredictions(List<double> predictions, double lat, double lng) async {
+    final original = predictions.asMap();
+    final speciesList = await query(lat, lng);
+    return original.entries.where((e) => speciesList.contains(e.key)).toList();
   }
 }

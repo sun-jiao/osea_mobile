@@ -13,6 +13,12 @@ mixin AppLocale {
   static const String locationSelection = 'selectLocation';
   static const String locationDisabled = 'locationDisabled';
   static const String locationPermissionDenied = 'locationPermissionDenied';
+  static const String locationFilter = 'locationFilter';
+  static const String locationFilterFix = 'locationFilterFix';
+  static const String locationFilterAuto = 'locationFilterAuto';
+  static const String locationFilterOff = 'locationFilterOff';
+  static const String locationRetrieveFailed = 'locationRetrieveFailed';
+  static const String locationFilterError = 'locationFilterError';
 
   static const Map<String, dynamic> EN = {
     title: 'Bird ID',
@@ -27,6 +33,12 @@ mixin AppLocale {
     locationSelection: 'Location Selection',
     locationDisabled: "Location services are disabled. Please enable the services",
     locationPermissionDenied: "Location permissions are permanently denied, we cannot request permissions",
+    locationFilter: 'Distribution Filter',
+    locationFilterFix: 'Fixed location (select on map)',
+    locationFilterAuto: 'Auto update (based on device location)',
+    locationFilterOff: 'Turn off location filter',
+    locationRetrieveFailed: 'Failed in retrieving device location, distribution filter not applied.',
+    locationFilterError: 'Distribution filter not applied due to unknown error.',
   };
   static const Map<String, dynamic> ZH = {
     title: 'Bird ID',
@@ -41,6 +53,12 @@ mixin AppLocale {
     locationSelection: '地点选择',
     locationDisabled: "定位服务未开启，请开启定位服务",
     locationPermissionDenied: "位置权限已被永久拒绝，无法请求位置权限",
+    locationFilter: '分布区过滤',
+    locationFilterFix: '固定地点（在地图上选择）',
+    locationFilterAuto: '自动更新（根据手机定位）',
+    locationFilterOff: '关闭分布区过滤',
+    locationRetrieveFailed: '未能获取位置信息，分布区过滤未能生效。',
+    locationFilterError: '发生未知错误，分布区过滤未能生效。',
   };
 }
 

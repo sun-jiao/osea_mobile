@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../entities/localization_mixin.dart';
+import 'device_tool.dart';
 
 // Merge service unavailability to LocationPermission.unableToDetermine
 Future<LocationPermission> locationAvailabilityChecker(BuildContext context) async {
@@ -49,25 +51,25 @@ Future<LocationPermission> locationAvailabilityChecker(BuildContext context) asy
   return locationPermission;
 }
 
+Future<LocationSettings> getLocationSettings() async {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    return AndroidSettings(
+      forceLocationManager: await DeviceTool().isGoogleAval,
+    );
+  } else {
+    return const LocationSettings();
+  }
+}
+
 Future<Position?> getCurrentLocation(BuildContext context) async {
   final locationAvailable = await locationAvailabilityChecker(context);
   if (locationAvailable.isFalse()) {
     return null;
   }
 
-  if (Platform.isAndroid) {
-    return await Geolocator.getCurrentPosition(
-      locationSettings: AndroidSettings(
-        forceLocationManager: true,
-      ),
-    );
-  } else if (Platform.isIOS) {
-    return await Geolocator.getCurrentPosition(
-      locationSettings: AppleSettings(),
-    );
-  } else {
-    throw UnimplementedError();
-  }
+  return await Geolocator.getCurrentPosition(
+    locationSettings: await getLocationSettings(),
+  );
 }
 
 extension ToBool on LocationPermission {

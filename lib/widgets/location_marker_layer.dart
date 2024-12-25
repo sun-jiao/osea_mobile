@@ -6,9 +6,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
 
 class LocationMarker extends StatefulWidget {
-  const LocationMarker({Key? key, required this.locationData})
+  const LocationMarker({Key? key, this.lat, this.lng, this.heading})
       : super(key: key);
-  final Position? locationData;
+  final double? lat;
+  final double? lng;
+  final double? heading;
 
   @override
   State<LocationMarker> createState() => _LocationMarkerState();
@@ -17,16 +19,15 @@ class LocationMarker extends StatefulWidget {
 class _LocationMarkerState extends State<LocationMarker> {
   @override
   Widget build(BuildContext context) {
-    var locationData = widget.locationData;
-    if (locationData == null) {
+    if (widget.lat == null || widget.lng == null) {
       return Container();
     }
     return MarkerLayer(
       markers: [
         Marker(
-          point: LatLng(locationData.latitude, locationData.longitude),
+          point: LatLng(widget.lat!, widget.lng!),
           child: Transform.rotate(
-            angle: 180 + locationData.heading,
+            angle: 180 + (widget.heading ?? 0),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -56,17 +57,18 @@ class _LocationMarkerState extends State<LocationMarker> {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 23,
-                  child: ClipPath(
-                    clipper: TriangleClipper(),
-                    child: Container(
-                      color: Colors.blueAccent,
-                      height: 7,
-                      width: 7,
+                if (widget.heading != null)
+                  Positioned(
+                    top: 23,
+                    child: ClipPath(
+                      clipper: TriangleClipper(),
+                      child: Container(
+                        color: Colors.blueAccent,
+                        height: 7,
+                        width: 7,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

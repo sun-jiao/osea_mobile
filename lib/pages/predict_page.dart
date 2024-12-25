@@ -1,14 +1,19 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:birdid/tools/distribution_tool.dart';
+import 'package:birdid/tools/shared_pref_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../tools/ai_tools.dart';
 import '../entities/detection_result.dart';
 import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
+import '../tools/location_tool.dart';
 import '../tools/tools.dart' as tools;
 import '../pages/settings_page.dart';
 import '../widgets/blured_image.dart';
@@ -31,6 +36,7 @@ class _PredictScreenState extends State<PredictScreen> {
   List<PredictResult> _topResults = [];
   List<DetectionResult> _detectionResults = [];
   int _objIndex = 0;
+  List<double> _predictions = [];
 
   // the complete image file
   Uint8List _file = Uint8List(0);
@@ -50,14 +56,20 @@ class _PredictScreenState extends State<PredictScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
+              Navigator
+                  .push(context, MaterialPageRoute(builder: (context) => SettingsPage()))
+                  .then((e) => setState(() {}));
             },
             icon: Icon(Icons.more_vert_rounded),
           ),
         ],
         leading: IconButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage()));
+            Navigator
+                .push(context, MaterialPageRoute(builder: (context) => MapPage()))
+                .then((e) {
+                  _endProcess();
+                });
           },
           icon: Icon(Icons.location_on_rounded),
         ),
@@ -197,7 +209,42 @@ class _PredictScreenState extends State<PredictScreen> {
     });
   }
 
-  void _endProcess(List<PredictResult> results) {
+  void _endProcess() async {
+    final List<MapEntry<int, double>> filtered;
+
+    switch (SharedPrefTool.locationFilter) {
+      case AppLocale.locationFilterOff:
+        filtered = _predictions.asMap().entries.toList();
+        break;
+      case AppLocale.locationFilterFix:
+        filtered = await Distribution.getFilteredPredictions(
+          _predictions,
+          SharedPrefTool.locationFilterLat,
+          SharedPrefTool.locationFilterLng,
+        );
+        break;
+      case AppLocale.locationFilterAuto:
+        final Position? position = await getCurrentLocation(context);
+
+        if (position == null) {
+          Fluttertoast.showToast(msg: AppLocale.locationRetrieveFailed.getString(context));
+          filtered = _predictions.asMap().entries.toList();
+        } else {
+          filtered = await Distribution.getFilteredPredictions(
+            _predictions,
+            position.latitude,
+            position.longitude,
+          );
+        }
+        break;
+      default:
+        Fluttertoast.showToast(msg: AppLocale.locationFilterError.getString(context));
+        filtered = _predictions.asMap().entries.toList();
+        break;
+    }
+
+    final results = tools.getTop(tools.softmax(filtered));
+
     setState(() {
       _topResults = results;
       _isProcessing = false;
@@ -223,8 +270,8 @@ class _PredictScreenState extends State<PredictScreen> {
       _image = crop;
     });
 
-    List<double> prediction = await AiTools.birdID(_image);
-    _endProcess(tools.getTop(tools.softmax(prediction)));
+    _predictions = await AiTools.birdID(_image);
+    _endProcess();
   }
   
   Future<void> _reCropImage() async {
@@ -238,9 +285,9 @@ class _PredictScreenState extends State<PredictScreen> {
       });
     }
 
-    List<double> prediction = await AiTools.birdID(_image);
+    _predictions = await AiTools.birdID(_image);
 
-    _endProcess(tools.getTop(tools.softmax(prediction)));
+    _endProcess();
 
     _objIndex = -1;
   }
@@ -258,7 +305,7 @@ class _PredictScreenState extends State<PredictScreen> {
       _image = crop;
     });
 
-    List<double> prediction = await AiTools.birdID(_image);
-    _endProcess(tools.getTop(tools.softmax(prediction)));
+    _predictions = await AiTools.birdID(_image);
+    _endProcess();
   }
 }

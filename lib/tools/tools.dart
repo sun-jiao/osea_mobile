@@ -11,28 +11,24 @@ import '../entities/detection_result.dart';
 // convert predict result to probabilities
 // take the Python code in Chinese Wikipedia as a reference:
 // https://zh.wikipedia.org/wiki/Softmax%E5%87%BD%E6%95%B0
-List<double> softmax(List<double> nums) {
-  Iterable<double> exps = nums.map((e) => math.exp(e));
+List<PredictResult> softmax(List<MapEntry<int, double>> nums) {
+  Iterable<double> exps = nums.map((e) => math.exp(e.value));
 
   double sumExp = exps.reduce((a, b) => a + b);
-  Iterable<double> probabilities = exps.map((exp) => exp / sumExp);
+  List<double> probabilities = exps.map((exp) => exp / sumExp).toList();
 
-  return probabilities.toList();
+  return List.generate(nums.length, (i) => PredictResult(nums[i].key, probabilities[i]));
 }
 
-List<PredictResult> getTop(List<double> probs, {
+List<PredictResult> getTop(List<PredictResult> probs, {
   int amount = 3,
   bool hideLowProb = true,
   double lowestValue = 0.01
 }) {
-  List<MapEntry<int, double>> sortedList = List.from(probs.asMap().entries)
-    ..sort((a, b) => b.value.compareTo(a.value));
-  List<MapEntry<int, double>> filteredList =
-      sortedList.where((e) => !hideLowProb || e.value > lowestValue).toList();
+  probs.sort((a, b) => b.prob.compareTo(a.prob));
 
-  return filteredList
+  return probs.where((e) => !hideLowProb || e.prob > lowestValue)
       .take(amount)
-      .map((e) => PredictResult(e.key, e.value))
       .toList();
 }
 

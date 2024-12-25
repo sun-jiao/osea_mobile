@@ -39,6 +39,7 @@ dependencies:
   device_info_plus: ^11.2.0
   flutter_localization: ^0.3.0
   flutter_map: ^7.0.2
+  fluttertoast: ^8.2.10
   geolocator: ^13.0.2
   google_api_availability: ^5.0.0
   latlong2: any
