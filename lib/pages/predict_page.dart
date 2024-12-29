@@ -37,6 +37,7 @@ class _PredictScreenState extends State<PredictScreen> {
   List<DetectionResult> _detectionResults = [];
   int _objIndex = 0;
   List<double> _predictions = [];
+  bool isOutOfRange = false;
 
   // the complete image file
   Uint8List _file = Uint8List(0);
@@ -147,6 +148,15 @@ class _PredictScreenState extends State<PredictScreen> {
                           ),
                       ],
                     ),
+                    if (isOutOfRange)
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          child: Text(
+                            AppLocale.outOfRange.getString(context),
+                          ),
+                        ),
+                      ),
                     Card(
                       margin: const EdgeInsets.all(16),
                       color: Colors.white,
@@ -249,12 +259,17 @@ class _PredictScreenState extends State<PredictScreen> {
         break;
     }
 
-    late final List<PredictResult> results;
+    List<PredictResult> results;
 
     if (filtered.isEmpty) {
       results = [];
     } else {
       results = tools.getTop(tools.softmax(filtered));
+    }
+
+    if (results.isEmpty) {
+      isOutOfRange = true;
+      results = tools.getTop(tools.softmax(_predictions.asMap().entries.toList()));
     }
 
     setState(() {
@@ -265,6 +280,7 @@ class _PredictScreenState extends State<PredictScreen> {
 
   void _startNewPredict(XFile xFile) async {
     _startProcess();
+    isOutOfRange = false;
     _file = await File(xFile.path).readAsBytes();
     _detectionResults = (await AiTools.birdDetect(_file)).where((e) => e.cls == _birdIndex).toList();
     _objIndex = 0;

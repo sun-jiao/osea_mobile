@@ -10,6 +10,7 @@ mixin AppLocale {
   static const String commonName = 'commonName';
   static const String scientificName = 'scientificName';
   static const String nameBoth = 'nameBoth';
+  static const String outOfRange = 'outOfRange';
   static const String locationSelection = 'selectLocation';
   static const String locationDisabled = 'locationDisabled';
   static const String locationPermissionDenied = 'locationPermissionDenied';
@@ -30,6 +31,7 @@ mixin AppLocale {
     commonName: 'Common name',
     scientificName: 'Scientific name',
     nameBoth: 'Both',
+    outOfRange: 'No results found in the specified range. Showing result from global.',
     locationSelection: 'Location Selection',
     locationDisabled: "Location services are disabled. Please enable the services",
     locationPermissionDenied: "Location permissions are permanently denied, we cannot request permissions",
@@ -50,6 +52,7 @@ mixin AppLocale {
     commonName: '俗名',
     scientificName: '学名',
     nameBoth: '二者均显示',
+    outOfRange: '在指定范围内找不到结果，正在显示全球结果。',
     locationSelection: '地点选择',
     locationDisabled: "定位服务未开启，请开启定位服务",
     locationPermissionDenied: "位置权限已被永久拒绝，无法请求位置权限",
