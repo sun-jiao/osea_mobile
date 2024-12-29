@@ -1,4 +1,4 @@
-# Flutter bird ID (temporary name)
+# *OSEA* Mobile
 
 <img src="/assets/icons/fore.png?raw=true" alt="icon" width="200"/>
 
