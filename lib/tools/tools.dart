@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -32,7 +33,10 @@ List<PredictResult> getTop(List<PredictResult> probs, {
       .toList();
 }
 
-Future<Uint8List?> autoCrop(Uint8List imageData, DetectionBox box) async {
+Future<Uint8List?> autoCrop(Uint8List imageData, DetectionBox box) async =>
+    Isolate.run<Uint8List?>(() => _autoCrop(imageData, box));
+
+Future<Uint8List?> _autoCrop(Uint8List imageData, DetectionBox box) async {
   final decoded = img.decodeImage(imageData);
 
   if (decoded == null) {

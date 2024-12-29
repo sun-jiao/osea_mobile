@@ -7,9 +7,14 @@ import 'package:sqflite/sqflite.dart';
 
 
 class Distribution {
-  static Database? db;
+  static Database? _db;
+  static Future<void>? _future;
+  
+  static void initFuture() {
+    _future = _initDB();
+  } 
 
-  static Future<void> initDB() async {
+  static Future<void> _initDB() async {
     io.Directory appDir = await getApplicationDocumentsDirectory();
     String dbPath = path.join(appDir.path, "avonet.db");
 
@@ -22,19 +27,21 @@ class Distribution {
       await io.File(dbPath).writeAsBytes(bytes, flush: true);
     }
 
-    db = await openDatabase(dbPath);
+    _db = await openDatabase(dbPath);
   }
 
   static Future<void> closeDB() async {
-    await db!.close();
+    await _db!.close();
   }
 
   static Future<List<int>> query(double lat, double lng) async {
-    if (db == null) {
-      await initDB();
+    while (_future == null) {
+      initFuture();
     }
 
-    return (await db!.rawQuery('''
+    await _future;
+
+    return (await _db!.rawQuery('''
 SELECT m.cls
 FROM distributions AS d
 LEFT OUTER JOIN places AS p

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -10,22 +11,42 @@ import '../entities/detection_result.dart';
 class AiTools {
   static OrtSession? _classifyModel;
   static OrtSession? _detectModel;
+  static List<Future<void>>? _futures;
+
+  static void initFuture() {
+    _futures = [
+      _initDetectModel(),
+      _initClassifyModel(),
+    ];
+  }
 
   static Future<void> _initDetectModel() async {
     final rawAssetFile = await rootBundle.load("assets/models/ssd_mobilenet.onnx");
-    final bytes = rawAssetFile.buffer.asUint8List();
-    final sessionOptions = OrtSessionOptions();
-    _detectModel = OrtSession.fromBuffer(bytes, sessionOptions);
+
+    _detectModel = await Isolate.run<OrtSession>(() async {
+      final bytes = rawAssetFile.buffer.asUint8List();
+      final sessionOptions = OrtSessionOptions();
+      return OrtSession.fromBuffer(bytes, sessionOptions);
+    });
   }
 
   static Future<List<DetectionResult>> birdDetect(Uint8List file) async {
-    while (_detectModel == null) {
-      await _initDetectModel();
+    while (_futures == null) {
+      initFuture();
     }
 
-    img.Image image = img.decodeImage(file)!;
-    final input = image.getBytes(order: img.ChannelOrder.rgb);
-    final shape = [1, image.height, image.width, 3];
+    await Future.wait(_futures!);
+
+    late final Uint8List input;
+    late final List<int> shape;
+
+    (input, shape) = await Isolate.run<(Uint8List, List<int>)>(() async {
+      img.Image image = img.decodeImage(file)!;
+      final input = image.getBytes(order: img.ChannelOrder.rgb);
+      final shape = [1, image.height, image.width, 3];
+      return (input, shape);
+    });
+
     final inputOrt = OrtValueTensor.createTensorWithDataList(input, shape);
 
     final inputs = {_detectModel!.inputNames[0]: inputOrt};
@@ -47,22 +68,32 @@ class AiTools {
   
   static Future<void> _initClassifyModel() async {
     final rawAssetFile = await rootBundle.load("assets/models/bird_model.onnx");
-    final bytes = rawAssetFile.buffer.asUint8List();
-    final sessionOptions = OrtSessionOptions();
-    _classifyModel = OrtSession.fromBuffer(bytes, sessionOptions);
+    _classifyModel = await Isolate.run<OrtSession>(() async {
+      final bytes = rawAssetFile.buffer.asUint8List();
+      final sessionOptions = OrtSessionOptions();
+      return OrtSession.fromBuffer(bytes, sessionOptions);
+    });
   }
 
   static Future<List<double>> birdID(Uint8List image0) async {
-    while (_classifyModel == null) {
-      await _initClassifyModel();
+    while (_futures == null) {
+      initFuture();
     }
 
-    img.Image image = img.decodeImage(image0)!;
-    image = img.copyResize(image, width: 224, height: 224);
+    await Future.wait(_futures!);
 
-    final rgbaTensor = await _imageToFloatTensor(image);
-    final inputTensor = Float32List.fromList(rgbaTensor);
-    final shape = [1, 3, 224, 224];
+    late final Float32List inputTensor;
+    late final List<int> shape;
+
+    (inputTensor, shape) = await Isolate.run<(Float32List, List<int>)>(() async {
+      img.Image image = img.decodeImage(image0)!;
+      image = img.copyResize(image, width: 224, height: 224);
+
+      final rgbaTensor = await _imageToFloatTensor(image);
+      final inputTensor = Float32List.fromList(rgbaTensor);
+      final shape = [1, 3, 224, 224];
+      return (inputTensor, shape);
+    });
 
     final inputOrt = OrtValueTensor.createTensorWithDataList(inputTensor, shape);
 

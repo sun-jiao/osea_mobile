@@ -249,7 +249,13 @@ class _PredictScreenState extends State<PredictScreen> {
         break;
     }
 
-    final results = tools.getTop(tools.softmax(filtered));
+    late final List<PredictResult> results;
+
+    if (filtered.isEmpty) {
+      results = [];
+    } else {
+      results = tools.getTop(tools.softmax(filtered));
+    }
 
     setState(() {
       _topResults = results;

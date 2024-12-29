@@ -1,11 +1,12 @@
+import 'package:birdid/tools/ai_tools.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:onnxruntime/onnxruntime.dart';
 
 import 'entities/localization_mixin.dart';
 import 'entities/predict_result.dart';
-import '../entities/app_dir.dart';
-import '../tools/distribution_tool.dart';
+import 'entities/app_dir.dart';
+import 'tools/distribution_tool.dart';
 import 'tools/shared_pref_tool.dart';
 import 'pages/predict_page.dart';
 
@@ -16,9 +17,10 @@ Future<void> main() async {
     FlutterLocalization.instance.ensureInitialized(),
     PredictResult.loadSpeciesInfo(),
     SharedPrefTool.loadSettings(),
-    Distribution.initDB(),
     AppDir.setDir(),
   ]);
+  AiTools.initFuture();
+  Distribution.initFuture();
   runApp(const MyApp());
 }
 
