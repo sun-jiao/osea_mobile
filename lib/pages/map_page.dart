@@ -242,6 +242,10 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
 
   void _setMapCoord(double lat, double lng,
       {double? heading, animate = false}) {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _lat = lat;
       _lng = lng;

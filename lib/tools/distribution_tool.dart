@@ -30,6 +30,10 @@ class Distribution {
   }
 
   static Future<List<int>> query(double lat, double lng) async {
+    if (db == null) {
+      await initDB();
+    }
+
     return (await db!.rawQuery('''
 SELECT m.cls
 FROM distributions AS d

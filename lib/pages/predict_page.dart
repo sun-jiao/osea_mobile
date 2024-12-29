@@ -1,18 +1,18 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:birdid/tools/distribution_tool.dart';
-import 'package:birdid/tools/shared_pref_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../tools/ai_tools.dart';
 import '../entities/detection_result.dart';
 import '../entities/localization_mixin.dart';
 import '../entities/predict_result.dart';
+import '../tools/ai_tools.dart';
+import '../tools/distribution_tool.dart';
+import '../tools/shared_pref_tool.dart';
 import '../tools/location_tool.dart';
 import '../tools/tools.dart' as tools;
 import '../pages/settings_page.dart';
@@ -60,7 +60,7 @@ class _PredictScreenState extends State<PredictScreen> {
                   .push(context, MaterialPageRoute(builder: (context) => SettingsPage()))
                   .then((e) => setState(() {}));
             },
-            icon: Icon(Icons.more_vert_rounded),
+            icon: Icon(Icons.settings_rounded),
           ),
         ],
         leading: IconButton(
