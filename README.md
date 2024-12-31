@@ -17,4 +17,4 @@ Structure of `assets` folder:
       - [bird_info.json](https://github.com/sun-jiao/MetaFGNet/releases)
     - models
       - bird_model.onnx (convert [model20240824.pth](https://github.com/sun-jiao/MetaFGNet/releases) to onnx)
-      - ssd_mobilenet.onnx (pre-trained model from [onnx modelzoo](https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1))
+      - ssd_mobilenet.onnx ([quantized version](https://github.com/sun-jiao/MetaFGNet/releases) of pre-trained model from [onnx modelzoo](https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1))
