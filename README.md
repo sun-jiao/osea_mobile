@@ -12,9 +12,9 @@ Structure of `assets` folder:
 - assets
     - icons (all in git)
     - db
-      - avonet.db
+      - [avonet.db](https://github.com/sun-jiao/osea_mobile/releases/download/assets/avonet.db)
     - labels
-      - [bird_info.json](https://github.com/sun-jiao/MetaFGNet/releases)
+      - [bird_info.json](https://github.com/sun-jiao/osea_mobile/releases/download/assets/bird_info.json)
     - models
-      - bird_model.onnx (convert [model20240824.pth](https://github.com/sun-jiao/MetaFGNet/releases) to onnx)
-      - ssd_mobilenet.onnx ([quantized version](https://github.com/sun-jiao/MetaFGNet/releases) of pre-trained model from [onnx modelzoo](https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1))
+      - bird_model.onnx (the [quantized onnx version](https://github.com/sun-jiao/osea_mobile/releases/download/assets/bird_model.onnx) of [model20240824.pth](https://github.com/sun-jiao/MetaFGNet/releases))
+      - ssd_mobilenet.onnx (the [quantized version](https://github.com/sun-jiao/osea_mobile/releases/download/assets/ssd_mobilenet.onnx) of pre-trained model from [onnx modelzoo](https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1))
