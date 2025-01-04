@@ -270,6 +270,8 @@ class _PredictScreenState extends State<PredictScreen> {
     if (results.isEmpty) {
       isOutOfRange = true;
       results = tools.getTop(tools.softmax(_predictions.asMap().entries.toList()));
+    } else {
+      isOutOfRange = false;
     }
 
     setState(() {
