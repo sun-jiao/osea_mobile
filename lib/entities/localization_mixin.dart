@@ -22,7 +22,7 @@ mixin AppLocale {
   static const String locationFilterError = 'locationFilterError';
 
   static const Map<String, dynamic> EN = {
-    title: 'Bird ID',
+    title: 'OSEA Bird ID',
     imgNeeded: 'Upload a bird image to recognize it',
     settings: 'Settings',
     uiLanguage: 'UI Language',
@@ -43,7 +43,7 @@ mixin AppLocale {
     locationFilterError: 'Distribution filter not applied due to unknown error.',
   };
   static const Map<String, dynamic> ZH = {
-    title: 'Bird ID',
+    title: 'OSEA鸟类识别',
     imgNeeded: '请上传图片以供识别',
     settings: '设置',
     uiLanguage: '界面语言',
