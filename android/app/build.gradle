@@ -5,6 +5,17 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def _storeFile = System.getenv("KEYSTORE") ?: keystoreProperties["storeFile"]
+def _storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProperties["storePassword"]
+def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
+def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
+
 android {
     namespace = "net.sunjiao.birdid"
     compileSdk = 35
@@ -37,6 +48,26 @@ android {
             signingConfig = signingConfigs.debug
             shrinkResources false
             minifyEnabled false
+        }
+    }
+
+    signingConfigs {
+        debug {
+            if (_storeFile && _storePassword && _keyAlias && _keyPassword) {
+                keyAlias _keyAlias
+                keyPassword _keyPassword
+                storeFile file(_storeFile)
+                storePassword _storePassword
+            } else null
+        }
+
+        release {
+            if (_storeFile && _storePassword && _keyAlias && _keyPassword) {
+                keyAlias _keyAlias
+                keyPassword _keyPassword
+                storeFile file(_storeFile)
+                storePassword _storePassword
+            } else null
         }
     }
 }
