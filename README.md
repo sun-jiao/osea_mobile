@@ -18,3 +18,5 @@ Structure of `assets` folder:
     - models
       - bird_model.onnx (the [quantized onnx version](https://github.com/sun-jiao/osea_mobile/releases/download/assets/bird_model.onnx) of [model20240824.pth](https://github.com/sun-jiao/MetaFGNet/releases))
       - ssd_mobilenet.onnx (the [quantized version](https://github.com/sun-jiao/osea_mobile/releases/download/assets/ssd_mobilenet.onnx) of pre-trained model from [onnx modelzoo](https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1))
+
+If you want to run batch classification for multiple photos, please check [osea-cli](https://github.com/sun-jiao/osea).
