@@ -99,14 +99,11 @@ class _PredictScreenState extends State<PredictScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Stack(
+                    Expanded(child: Stack(
                       children: [
-                        AspectRatio(
-                          aspectRatio: 1,
-                          child: BlurredImageWidget(
-                            imageProvider: MemoryImage(_image),
-                            backProvider: MemoryImage(_file),
-                          ),
+                        BlurredImageWidget(
+                          imageProvider: MemoryImage(_image),
+                          backProvider: MemoryImage(_file),
                         ),
                         Positioned(
                           right: 4,
@@ -147,7 +144,7 @@ class _PredictScreenState extends State<PredictScreen> {
                             ),
                           ),
                       ],
-                    ),
+                    )),
                     if (isOutOfRange)
                       Center(
                         child: Padding(
@@ -157,11 +154,8 @@ class _PredictScreenState extends State<PredictScreen> {
                           ),
                         ),
                       ),
-                    Card(
+                    Container(
                       margin: const EdgeInsets.all(16),
-                      color: Colors.white,
-                      surfaceTintColor: Colors.white,
-                      shadowColor: Colors.transparent,
                       child: Column(
                         children: _topResults
                             .map((e) => ResultTile(result: e))

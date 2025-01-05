@@ -10,19 +10,24 @@ class ResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(
-        getIcon(result.prob),
+    return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      shadowColor: Colors.transparent,
+      child: ListTile(
+        leading: Icon(
+          getIcon(result.prob),
+        ),
+        title: Text(
+          SharedPrefTool.selectedSpeciesDisplay != AppLocale.scientificName ? result.label : result.scientificName,
+          style: TextStyle(fontSize: 18, fontStyle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.scientificName ? FontStyle.italic : null),
+        ),
+        subtitle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.nameBoth ? Text(
+          result.scientificName,
+          style: const TextStyle(fontStyle: FontStyle.italic),
+        ) : null,
+        trailing: Text('${(result.prob * 100).toStringAsFixed(2)}%'),
       ),
-      title: Text(
-        SharedPrefTool.selectedSpeciesDisplay != AppLocale.scientificName ? result.label : result.scientificName,
-        style: TextStyle(fontSize: 18, fontStyle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.scientificName ? FontStyle.italic : null),
-      ),
-      subtitle: SharedPrefTool.selectedSpeciesDisplay == AppLocale.nameBoth ? Text(
-        result.scientificName,
-        style: const TextStyle(fontStyle: FontStyle.italic),
-      ) : null,
-      trailing: Text('${(result.prob * 100).toStringAsFixed(2)}%'),
     );
   }
 

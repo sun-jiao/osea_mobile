@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'settings_child_page.dart';
 import '../entities/localization_mixin.dart';
@@ -113,6 +114,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     SharedPrefTool.selectedSpeciesDisplay = value!;
                   });
                 },
+              ),
+              Divider(),
+              ListTile(
+                title: Text(AppLocale.openSourceLicenses.getString(context)),
+                onTap: () => showAboutDialog(
+                  applicationName: AppLocale.title.getString(context),
+                  context: context,
+                ),
+              ),
+              Divider(),
+              ListTile(
+                title: Text('GitHub'),
+                trailing: Icon(Icons.open_in_browser_rounded),
+                onTap: () => launchUrl(
+                  Uri.parse("https://github.com/sun-jiao/osea_mobile"),
+                  mode: LaunchMode.externalApplication,
+                ),
               ),
             ],
           ),

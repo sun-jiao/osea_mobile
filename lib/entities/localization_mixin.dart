@@ -20,6 +20,7 @@ mixin AppLocale {
   static const String locationFilterOff = 'locationFilterOff';
   static const String locationRetrieveFailed = 'locationRetrieveFailed';
   static const String locationFilterError = 'locationFilterError';
+  static const String openSourceLicenses = 'openSourceLicenses';
 
   static const Map<String, dynamic> EN = {
     title: 'OSEA Bird ID',
@@ -41,6 +42,7 @@ mixin AppLocale {
     locationFilterOff: 'Turn off location filter',
     locationRetrieveFailed: 'Failed in retrieving device location, distribution filter not applied.',
     locationFilterError: 'Distribution filter not applied due to unknown error.',
+    openSourceLicenses: 'Open source licenses',
   };
   static const Map<String, dynamic> ZH = {
     title: 'OSEA鸟类识别',
@@ -62,6 +64,7 @@ mixin AppLocale {
     locationFilterOff: '关闭分布区过滤',
     locationRetrieveFailed: '未能获取位置信息，分布区过滤未能生效。',
     locationFilterError: '发生未知错误，分布区过滤未能生效。',
+    openSourceLicenses: '开放源代码协议',
   };
 }
 
