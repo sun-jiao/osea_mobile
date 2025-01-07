@@ -41,7 +41,7 @@ class _PredictScreenState extends State<PredictScreen> {
 
   // the complete image file
   Uint8List _file = Uint8List(0);
-  
+
   // part of the complete image, used for identification,
   // cropped by user or automatically cropped based on yolo detection
   Uint8List _image = Uint8List(0);
@@ -69,7 +69,7 @@ class _PredictScreenState extends State<PredictScreen> {
             Navigator
                 .push(context, MaterialPageRoute(builder: (context) => MapPage()))
                 .then((e) {
-                  if (_predictions.isNotEmpty) {
+              if (_predictions.isNotEmpty) {
                 _endProcess();
               }
             });
@@ -99,52 +99,54 @@ class _PredictScreenState extends State<PredictScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Expanded(child: Stack(
-                      children: [
-                        BlurredImageWidget(
-                          imageProvider: MemoryImage(_image),
-                          backProvider: MemoryImage(_file),
-                        ),
-                        Positioned(
-                          right: 4,
-                          bottom: 4,
-                          child: IconButton.filled(
-                            onPressed: _reCropImage,
-                            icon: Icon(Icons.crop_rounded),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          BlurredImageWidget(
+                            imageProvider: MemoryImage(_image),
+                            backProvider: MemoryImage(_file),
                           ),
-                        ),
-                        if (_objIndex > 0)
-                          Positioned(
-                            left: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: IconButton.filled(
-                                onPressed: () {
-                                  _objIndex--;
-                                  _switchCrop();
-                                },
-                                icon: Icon(Icons.arrow_left_rounded),
-                              ),
-                            ),
-                          ),
-                        if (_objIndex < _detectionResults.length - 1)
                           Positioned(
                             right: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: IconButton.filled(
-                                onPressed: () {
-                                  _objIndex++;
-                                  _switchCrop();
-                                },
-                                icon: Icon(Icons.arrow_right_rounded),
-                              ),
+                            bottom: 4,
+                            child: IconButton.filled(
+                              onPressed: _reCropImage,
+                              icon: Icon(Icons.crop_rounded),
                             ),
                           ),
-                      ],
-                    )),
+                          if (_objIndex > 0)
+                            Positioned(
+                              left: 4,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    _objIndex--;
+                                    _switchCrop();
+                                  },
+                                  icon: Icon(Icons.arrow_left_rounded),
+                                ),
+                              ),
+                            ),
+                          if (_objIndex < _detectionResults.length - 1)
+                            Positioned(
+                              right: 4,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    _objIndex++;
+                                    _switchCrop();
+                                  },
+                                  icon: Icon(Icons.arrow_right_rounded),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                     if (isOutOfRange)
                       Center(
                         child: Padding(
@@ -154,12 +156,14 @@ class _PredictScreenState extends State<PredictScreen> {
                           ),
                         ),
                       ),
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      child: Column(
-                        children: _topResults
-                            .map((e) => ResultTile(result: e))
-                            .toList(),
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.all(16),
+                        child: Column(
+                          children: _topResults
+                              .map((e) => ResultTile(result: e))
+                              .toList(),
+                        ),
                       ),
                     ),
                   ],
@@ -206,7 +210,7 @@ class _PredictScreenState extends State<PredictScreen> {
       _startNewPredict(image);
     }
   }
-  
+
   void _startProcess() {
     setState(() {
       // clear previous id result
@@ -278,7 +282,9 @@ class _PredictScreenState extends State<PredictScreen> {
     _startProcess();
     isOutOfRange = false;
     _file = await File(xFile.path).readAsBytes();
-    _detectionResults = (await AiTools.birdDetect(_file)).where((e) => e.cls == _birdIndex).toList();
+    _detectionResults = (await AiTools.birdDetect(_file))
+        .where((e) => e.cls == _birdIndex)
+        .toList();
     _objIndex = 0;
     final Uint8List crop;
 
@@ -297,7 +303,7 @@ class _PredictScreenState extends State<PredictScreen> {
     _predictions = await AiTools.birdID(_image);
     _endProcess();
   }
-  
+
   Future<void> _reCropImage() async {
     _startProcess();
 
