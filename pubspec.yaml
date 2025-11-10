@@ -34,23 +34,24 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  camerawesome: ^2.1.0
+  camerawesome: ^2.5.0
   crop_your_image: ^2.0.0
-  device_info_plus: ^11.2.0
-  flutter_localization: ^0.3.0
-  flutter_map: ^7.0.2
-  fluttertoast: ^8.2.10
-  geolocator: ^13.0.2
-  google_api_availability: ^5.0.0
+  device_info_plus: ^12.2.0
+  flutter_localization: ^0.3.3
+  flutter_map: ^8.2.2
+  fluttertoast: ^9.0.0
+  geolocator: ^14.0.2
+  google_api_availability: ^5.0.1
   latlong2: any
-  image: ^4.5.2
-  image_picker: ^1.1.2
-  onnxruntime: ^1.4.1
+  image: ^4.5.4
+  image_picker: ^1.2.0
+  onnxruntime:
+    path: ../onnxruntime_flutter
   path: any
   path_provider: ^2.1.5
-  shared_preferences: ^2.3.5
-  sqflite: ^2.4.1
-  url_launcher: ^6.3.1
+  shared_preferences: ^2.5.3
+  sqflite: ^2.4.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -61,8 +62,8 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_launcher_icons: ^0.14.2
-  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^6.0.0
 
 # dart run flutter_launcher_icons
 flutter_icons:

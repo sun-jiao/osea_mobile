@@ -9,7 +9,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
 // ignore: implementation_imports
-import 'package:flutter_map/src/layer/tile_layer/tile_provider/network_image_provider.dart';
+import 'package:flutter_map/src/layer/tile_layer/tile_provider/network/image_provider/image_provider.dart'; // this line will be warned as "Don't import Implementation files from other package", just ignore it.
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart';
 import 'package:http/retry.dart';
@@ -19,7 +19,7 @@ import 'app_dir.dart';
 class CacheTileProvider extends NetworkTileProvider {
   String tileName;
 
-  final BaseClient _httpClient;
+  final Client _httpClient;
 
   CacheTileProvider(
       this.tileName, {
@@ -42,14 +42,15 @@ class CacheTileProvider extends NetworkTileProvider {
         httpClient: _httpClient,
         fallbackUrl: null,
         silenceExceptions: true,
-        startedLoading: () {  },
-        finishedLoadingBytes: () {  },
+        abortTrigger: null,
+        attemptDecodeOfHttpErrorResponses: true,
+        cachingProvider: null,
       );
     }
   }
 }
 
-class NetworkImageSaverProvider extends MapNetworkImageProvider {
+class NetworkImageSaverProvider extends NetworkTileImageProvider {
   final File file;
 
   const NetworkImageSaverProvider(
@@ -59,8 +60,9 @@ class NetworkImageSaverProvider extends MapNetworkImageProvider {
         required super.httpClient,
         super.headers = const {},
         required super.silenceExceptions,
-        required super.startedLoading,
-        required super.finishedLoadingBytes,
+        required super.abortTrigger,
+        required super.attemptDecodeOfHttpErrorResponses,
+        required super.cachingProvider,
       });
 
   @override
