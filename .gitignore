@@ -53,3 +53,4 @@ assets/labels/bird_info.json
 assets/labels/yolo_labels.txt
 *.db
 android/build/reports/problems/problems-report.html
+android/.kotlin/sessions/kotlin-compiler-2595419749232167736.salive
