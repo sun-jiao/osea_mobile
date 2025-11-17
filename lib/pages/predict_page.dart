@@ -95,79 +95,118 @@ class _PredictScreenState extends State<PredictScreen> {
       body: Stack(
         children: [
           _image.isNotEmpty
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          BlurredImageWidget(
-                            imageProvider: MemoryImage(_image),
-                            backProvider: MemoryImage(_file),
+              ? OrientationBuilder(builder: (context, orientation) {
+                  final imageWidget = Expanded(
+                    child: Stack(
+                      children: [
+                        BlurredImageWidget(
+                          imageProvider: MemoryImage(_image),
+                          backProvider: MemoryImage(_file),
+                        ),
+                        Positioned(
+                          left: 4,
+                          bottom: 4,
+                          child: IconButton.filled(
+                            onPressed: _reCropImage,
+                            icon: Icon(Icons.crop_rounded),
                           ),
+                        ),
+                        if (_objIndex > 0)
+                          Positioned(
+                            left: 4,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton.filled(
+                                onPressed: () {
+                                  _objIndex--;
+                                  _switchCrop();
+                                },
+                                icon: Icon(Icons.arrow_left_rounded),
+                              ),
+                            ),
+                          ),
+                        if (_objIndex < _detectionResults.length - 1)
                           Positioned(
                             right: 4,
-                            bottom: 4,
-                            child: IconButton.filled(
-                              onPressed: _reCropImage,
-                              icon: Icon(Icons.crop_rounded),
-                            ),
-                          ),
-                          if (_objIndex > 0)
-                            Positioned(
-                              left: 4,
-                              top: 0,
-                              bottom: 0,
-                              child: Center(
-                                child: IconButton.filled(
-                                  onPressed: () {
-                                    _objIndex--;
-                                    _switchCrop();
-                                  },
-                                  icon: Icon(Icons.arrow_left_rounded),
-                                ),
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton.filled(
+                                onPressed: () {
+                                  _objIndex++;
+                                  _switchCrop();
+                                },
+                                icon: Icon(Icons.arrow_right_rounded),
                               ),
                             ),
-                          if (_objIndex < _detectionResults.length - 1)
-                            Positioned(
-                              right: 4,
-                              top: 0,
-                              bottom: 0,
-                              child: Center(
-                                child: IconButton.filled(
-                                  onPressed: () {
-                                    _objIndex++;
-                                    _switchCrop();
-                                  },
-                                  icon: Icon(Icons.arrow_right_rounded),
-                                ),
+                          ),
+                      ],
+                    ),
+                  );
+                  if (orientation == Orientation.portrait) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        imageWidget,
+                        if (isOutOfRange)
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                              child: Text(
+                                AppLocale.outOfRange.getString(context),
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-                    if (isOutOfRange)
-                      Center(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                          child: Text(
-                            AppLocale.outOfRange.getString(context),
+                          ),
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.all(16),
+                            child: ListView(
+                              children: _topResults
+                                  .map((e) => ResultTile(result: e))
+                                  .toList(),
+                            ),
                           ),
                         ),
-                      ),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.all(16),
-                        child: Column(
-                          children: _topResults
-                              .map((e) => ResultTile(result: e))
-                              .toList(),
+                      ],
+                    );
+                  } else {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        imageWidget,
+                        Expanded(
+                          child: Column(
+                            children: [
+                              if (isOutOfRange)
+                                Center(
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                                    child: Text(
+                                      AppLocale.outOfRange.getString(context),
+                                    ),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Container(
+                                  margin: const EdgeInsets.all(16),
+                                  child: ListView(
+                                    children: _topResults
+                                        .map((e) => ResultTile(result: e))
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                )
+                      ],
+                    );
+                  }
+                })
               : Center(
                   child: Text(
                     AppLocale.imgNeeded.getString(context),

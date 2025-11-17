@@ -52,3 +52,4 @@ pubspec.lock
 assets/labels/bird_info.json
 assets/labels/yolo_labels.txt
 *.db
+android/build/reports/problems/problems-report.html
