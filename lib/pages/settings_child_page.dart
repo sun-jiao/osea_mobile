@@ -32,24 +32,20 @@ class _SettingsPageState extends State<SettingsChildPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: ListView.builder(
-        itemCount: widget.list.length,
-        itemBuilder: (context, index) => RadioListTile<String>(
-          title: Text(widget.list[index].value),
-          value: widget.list[index].key,
-          groupValue: selected,
-          onChanged: (value) {
-            if (value != null) {
-              widget.callback.call(value);
-
-              setState(() {
-                selected = value;
-              });
-            }
-          },
+      appBar: AppBar(title: Text(widget.title)),
+      body: RadioGroup<String>(
+        groupValue: selected,
+        onChanged: (value) {
+          if (value == null) return;
+          widget.callback(value);
+          setState(() => selected = value);
+        },
+        child: ListView.builder(
+          itemCount: widget.list.length,
+          itemBuilder: (context, index) => RadioListTile<String>(
+            title: Text(widget.list[index].value),
+            value: widget.list[index].key,
+          ),
         ),
       ),
     );

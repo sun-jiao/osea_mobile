@@ -44,7 +44,6 @@ app.*.map.json
 
 # user specified
 .metadata
-pubspec.lock
 *.onnx
 *.mlmodel
 *.torchscript

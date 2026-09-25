@@ -1,0 +1,95 @@
+name: Checks
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: birdid
+      - uses: actions/checkout@v4
+        with:
+          repository: sun-jiao/onnxruntime_flutter
+          ref: 5fea63bc93b400c3e7aa25a98df0be594763f43f
+          path: onnxruntime_flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
+          cache: true
+      - name: Fetch verified assets
+        working-directory: birdid
+        run: bash assets_download.sh
+      - name: Resolve locked dependencies
+        working-directory: birdid
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze
+        working-directory: birdid
+        run: flutter analyze --no-pub
+      - name: Regression tests
+        working-directory: birdid
+        run: |
+          flutter test --no-pub
+          python3 -m unittest discover -s test -p 'test_*.py'
+
+  ios-build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: birdid
+      - uses: actions/checkout@v4
+        with:
+          repository: sun-jiao/onnxruntime_flutter
+          ref: 5fea63bc93b400c3e7aa25a98df0be594763f43f
+          path: onnxruntime_flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
+          cache: true
+      - name: Fetch verified assets
+        working-directory: birdid
+        run: bash assets_download.sh
+      - name: Resolve locked dependencies
+        working-directory: birdid
+        run: flutter pub get --enforce-lockfile
+      - name: Build iOS without signing
+        working-directory: birdid
+        run: flutter build ios --debug --no-codesign --no-pub
+
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: birdid
+      - uses: actions/checkout@v4
+        with:
+          repository: sun-jiao/onnxruntime_flutter
+          ref: 5fea63bc93b400c3e7aa25a98df0be594763f43f
+          path: onnxruntime_flutter
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
+          cache: true
+      - name: Fetch verified assets
+        working-directory: birdid
+        run: bash assets_download.sh
+      - name: Resolve locked dependencies
+        working-directory: birdid
+        run: flutter pub get --enforce-lockfile
+      - name: Build Android
+        working-directory: birdid
+        run: flutter build apk --debug --no-pub

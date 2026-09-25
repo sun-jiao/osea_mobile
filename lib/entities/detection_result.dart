@@ -5,16 +5,21 @@ class DetectionBox {
   final double right;
   final double bottom;
 
+  bool get isValid =>
+      [left, top, right, bottom].every((v) => v.isFinite) &&
+      right > left &&
+      bottom > top &&
+      right > 0 &&
+      bottom > 0 &&
+      left < 1 &&
+      top < 1;
+
   double get width => right - left;
   double get height => bottom - top;
 }
 
 class DetectionResult {
-  DetectionResult(
-    List<double> box,
-    this.cls,
-    this.score,
-  ) {
+  DetectionResult(List<double> box, this.cls, this.score) {
     this.box = DetectionBox(box[0], box[1], box[2], box[3]);
   }
 

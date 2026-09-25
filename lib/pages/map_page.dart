@@ -13,7 +13,9 @@ import '../tools/location_tool.dart';
 import '../widgets/location_marker_layer.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  const MapPage({super.key, this.tileLayer});
+
+  final TileLayer? tileLayer;
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -22,7 +24,10 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   static const _edgeInsets = EdgeInsets.fromLTRB(8, 8, 8, 8);
   final MapController _mapController = MapController();
-  StreamSubscription? subscription;
+  late final TileLayer _tiles = widget.tileLayer ?? MapTiles.osm;
+  StreamSubscription<Position>? subscription;
+  int _subscriptionGeneration = 0;
+  bool _locating = false;
 
   double? _lat;
   double? _lng;
@@ -31,26 +36,17 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true; // this is must
 
-  @override
-  void initState() {
+  void _onMapReady() {
     switch (SharedPrefTool.locationFilter) {
-      case AppLocale.locationFilterOff:
-        break;
       case AppLocale.locationFilterFix:
-        Future.delayed(Duration(milliseconds: 500)).then((e) {
-          _setMapCoord(SharedPrefTool.locationFilterLat,
-              SharedPrefTool.locationFilterLng,
-              animate: true);
-        });
-        break;
+        _setMapCoord(
+          SharedPrefTool.locationFilterLat,
+          SharedPrefTool.locationFilterLng,
+          animate: true,
+        );
       case AppLocale.locationFilterAuto:
-        _getCurrentLocation(context, animate: true);
         startSubscription();
-        break;
-      default:
-        break;
     }
-    super.initState();
   }
 
   String _locationText(double? lat, double? lng) {
@@ -61,22 +57,58 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     return "${lat.abs()}${lat.sign == -1 ? '°S' : '°N'}\r\n${lng.abs()}${lng.sign == -1 ? '°W' : '°E'}";
   }
 
-  startSubscription() async {
-    subscription = Geolocator.getPositionStream(
-            locationSettings: await getLocationSettings())
-        .listen((position) {
-      _setMapLocation(position);
-    });
+  Future<void> startSubscription() async {
+    stopSubscription();
+    final generation = _subscriptionGeneration;
+    try {
+      final permission = await locationAvailabilityChecker(context);
+      if (!mounted ||
+          generation != _subscriptionGeneration ||
+          !permission.isTrue()) {
+        return;
+      }
+      final settings = await getLocationSettings();
+      if (!mounted || generation != _subscriptionGeneration) return;
+      bool first = true;
+      subscription = Geolocator.getPositionStream(locationSettings: settings)
+          .listen(
+            (position) {
+              if (!mounted || generation != _subscriptionGeneration) return;
+              _setMapLocation(position, animate: first);
+              first = false;
+            },
+            onError: (Object error) {
+              if (!mounted || generation != _subscriptionGeneration) return;
+              stopSubscription();
+              _showLocationError();
+            },
+            cancelOnError: true,
+          );
+    } catch (_) {
+      if (mounted && generation == _subscriptionGeneration) {
+        _showLocationError();
+      }
+    }
   }
 
-  stopSubscription() {
-    subscription?.cancel();
+  void _showLocationError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocale.locationRetrieveFailed.getString(context)),
+      ),
+    );
+  }
+
+  void stopSubscription() {
+    _subscriptionGeneration++;
+    unawaited(subscription?.cancel());
     subscription = null;
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     stopSubscription();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -93,161 +125,170 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         appBar: AppBar(
           title: Text(AppLocale.locationSelection.getString(context)),
         ),
-        body: OrientationBuilder(builder: (context, orientation) {
-          final mapWidget = Expanded(
-            flex: 3,
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: const LatLng(0, 0),
-                initialZoom: 4,
-                maxZoom: 18.0,
-                minZoom: 2,
-                cameraConstraint: const CameraConstraint.unconstrained(),
-                keepAlive: true,
-                initialRotation: 0,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.pinchZoom |
-                      InteractiveFlag.drag |
-                      InteractiveFlag.doubleTapZoom,
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            final mapWidget = Expanded(
+              flex: 3,
+              child: FlutterMap(
+                options: MapOptions(
+                  onMapReady: _onMapReady,
+                  initialCenter: const LatLng(0, 0),
+                  initialZoom: 4,
+                  maxZoom: 18.0,
+                  minZoom: 2,
+                  cameraConstraint: const CameraConstraint.unconstrained(),
+                  keepAlive: true,
+                  initialRotation: 0,
+                  interactionOptions: const InteractionOptions(
+                    flags:
+                        InteractiveFlag.pinchZoom |
+                        InteractiveFlag.drag |
+                        InteractiveFlag.doubleTapZoom,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  onTap: (tap, point) {
+                    if (SharedPrefTool.locationFilter !=
+                        AppLocale.locationFilterFix) {
+                      return;
+                    }
+
+                    SharedPrefTool.locationFilterLat = point.latitude;
+                    SharedPrefTool.locationFilterLng = point.longitude;
+
+                    _setMapCoord(
+                      point.latitude,
+                      point.longitude,
+                      heading: null,
+                      animate: true,
+                    );
+                  },
                 ),
-                backgroundColor: Colors.transparent,
-                onTap: (tap, point) {
-                  if (SharedPrefTool.locationFilter !=
-                      AppLocale.locationFilterFix) {
-                    return;
-                  }
-
-                  SharedPrefTool.locationFilterLat = point.latitude;
-                  SharedPrefTool.locationFilterLng = point.longitude;
-
-                  _setMapCoord(point.latitude, point.longitude,
-                      heading: null, animate: true);
-                },
+                mapController: _mapController,
+                children: [
+                  // rotated children
+                  _tiles,
+                  LocationMarker(lat: _lat, lng: _lng, heading: _heading),
+                  // non-rotated children
+                  RichAttributionWidget(
+                    attributions: [TextSourceAttribution('OpenStreetMap.Fr')],
+                  ),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(0, 20, 15, 0),
+                    alignment: Alignment.topRight,
+                    child: FloatingActionButton.small(
+                      heroTag: Icons.my_location_outlined,
+                      backgroundColor: Colors.white,
+                      onPressed: () => {
+                        _getCurrentLocation(context, animate: true),
+                      },
+                      shape: const CircleBorder(),
+                      child: const IconTheme(
+                        data: IconThemeData(color: Colors.black54),
+                        child: Icon(Icons.my_location_outlined),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white70,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: _edgeInsets,
+                      margin: _edgeInsets,
+                      transformAlignment: Alignment.bottomLeft,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        direction: Axis.vertical,
+                        children: [
+                          Text(
+                            _locationText(_lat, _lng),
+                            textAlign: TextAlign.left,
+                            key: const Key('location_text'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              mapController: _mapController,
-              children: [
-                // rotated children
-                MapTiles.osm,
-                LocationMarker(
-                  lat: _lat,
-                  lng: _lng,
-                  heading: _heading,
-                ),
-                // non-rotated children
-                RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution('OpenStreetMap.Fr'),
+            );
+            final listWidget = Expanded(
+              flex: 2,
+              child: RadioGroup<String>(
+                groupValue: SharedPrefTool.locationFilter,
+                onChanged: _changeLocationFilter,
+                child: ListView(
+                  children: [
+                    ListTile(
+                      title: Text(
+                        AppLocale.locationFilter.getString(context),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    RadioListTile<String>(
+                      title: Text(
+                        AppLocale.locationFilterAuto.getString(context),
+                      ),
+                      value: AppLocale.locationFilterAuto,
+                    ),
+                    RadioListTile<String>(
+                      title: Text(
+                        AppLocale.locationFilterFix.getString(context),
+                      ),
+                      value: AppLocale.locationFilterFix,
+                    ),
+                    RadioListTile<String>(
+                      title: Text(
+                        AppLocale.locationFilterOff.getString(context),
+                      ),
+                      value: AppLocale.locationFilterOff,
+                    ),
                   ],
                 ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(0, 20, 15, 0),
-                  alignment: Alignment.topRight,
-                  child: FloatingActionButton.small(
-                    heroTag: Icons.my_location_outlined,
-                    backgroundColor: Colors.white,
-                    onPressed: () =>
-                        {_getCurrentLocation(context, animate: true)},
-                    shape: const CircleBorder(),
-                    child: const IconTheme(
-                      data: IconThemeData(color: Colors.black54),
-                      child: Icon(Icons.my_location_outlined),
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.bottomLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        color: Colors.white70,
-                        borderRadius: BorderRadius.circular(8)),
-                    padding: _edgeInsets,
-                    margin: _edgeInsets,
-                    transformAlignment: Alignment.bottomLeft,
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      runAlignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      direction: Axis.vertical,
-                      children: [
-                        Text(
-                          _locationText(_lat, _lng),
-                          textAlign: TextAlign.left,
-                          key: const Key('location_text'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-          final listWidget = Expanded(
-            flex: 2,
-            child: ListView(
-              children: [
-                ListTile(
-                  title: Text(AppLocale.locationFilter.getString(context),
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterAuto.getString(context)),
-                  value: AppLocale.locationFilterAuto,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    _getCurrentLocation(context, animate: true);
-                    startSubscription();
-                    setState(() {
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterFix.getString(context)),
-                  value: AppLocale.locationFilterFix,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    stopSubscription();
-                    setState(() {
-                      _setMapCoord(SharedPrefTool.locationFilterLat,
-                          SharedPrefTool.locationFilterLng,
-                          animate: true);
-
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-                RadioListTile<String>(
-                  title: Text(AppLocale.locationFilterOff.getString(context)),
-                  value: AppLocale.locationFilterOff,
-                  groupValue: SharedPrefTool.locationFilter,
-                  onChanged: (value) {
-                    stopSubscription();
-                    setState(() {
-                      _lat = null;
-                      _lng = null;
-                      SharedPrefTool.locationFilter = value!;
-                    });
-                  },
-                ),
-              ],
-            ),
-          );
-          if (orientation == Orientation.portrait) {
-            return Column(
+              ),
+            );
+            return Flex(
+              direction: orientation == Orientation.portrait
+                  ? Axis.vertical
+                  : Axis.horizontal,
               children: [mapWidget, listWidget],
             );
-          } else {
-            return Row(
-              children: [mapWidget, listWidget],
-            );
-          }
-        }),
+          },
+        ),
       ),
     );
   }
 
-  void _setMapCoord(double lat, double lng,
-      {double? heading, animate = false}) {
+  void _changeLocationFilter(String? value) {
+    if (value == null || value == SharedPrefTool.locationFilter) return;
+    stopSubscription();
+    setState(() {
+      SharedPrefTool.locationFilter = value;
+      _lat = null;
+      _lng = null;
+      _heading = null;
+    });
+    if (value == AppLocale.locationFilterAuto) {
+      startSubscription();
+    } else if (value == AppLocale.locationFilterFix) {
+      _setMapCoord(
+        SharedPrefTool.locationFilterLat,
+        SharedPrefTool.locationFilterLng,
+        animate: true,
+      );
+    }
+  }
+
+  void _setMapCoord(
+    double lat,
+    double lng, {
+    double? heading,
+    animate = false,
+  }) {
     if (!mounted) {
       return;
     }
@@ -266,15 +307,31 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   }
 
   void _setMapLocation(Position locationData, {animate = false}) {
-    _setMapCoord(locationData.latitude, locationData.longitude,
-        heading: locationData.heading, animate: animate);
+    _setMapCoord(
+      locationData.latitude,
+      locationData.longitude,
+      heading: locationData.heading,
+      animate: animate,
+    );
   }
 
-  Future<void> _getCurrentLocation(BuildContext context,
-      {animate = false}) async {
-    Position? locationData = await getCurrentLocation(context);
-    if (locationData != null) {
-      _setMapLocation(locationData, animate: animate);
+  Future<void> _getCurrentLocation(
+    BuildContext context, {
+    animate = false,
+  }) async {
+    if (_locating) return;
+    _locating = true;
+    final generation = _subscriptionGeneration;
+    try {
+      final locationData = await getCurrentLocation(context);
+      if (!mounted || generation != _subscriptionGeneration) return;
+      if (locationData != null) {
+        _setMapLocation(locationData, animate: animate);
+      } else {
+        _showLocationError();
+      }
+    } finally {
+      _locating = false;
     }
   }
 }

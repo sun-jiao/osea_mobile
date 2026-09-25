@@ -21,16 +21,11 @@ class BlurredImageWidget extends StatelessWidget {
         ClipRect(
           child: Container(
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: backProvider,
-                fit: BoxFit.cover,
-              ),
+              image: DecorationImage(image: backProvider, fit: BoxFit.cover),
             ),
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: Container(
-                color: Colors.black.withOpacity(0.4),
-              ),
+              child: Container(color: Colors.black.withValues(alpha: 0.4)),
             ),
           ),
         ),
@@ -38,17 +33,12 @@ class BlurredImageWidget extends StatelessWidget {
           child: Container(
             margin: EdgeInsets.all(margin),
             decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2.0,
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(12))),
+              border: Border.all(color: Colors.white, width: 2.0),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+            ),
             child: ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              child: Image(
-                image: imageProvider,
-                fit: BoxFit.contain,
-              ),
+              child: Image(image: imageProvider, fit: BoxFit.contain),
             ),
           ),
         ),

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 // ignore_for_file: use_super_parameters
 
 import 'package:flutter/material.dart';
@@ -6,7 +8,7 @@ import 'package:latlong2/latlong.dart' show LatLng;
 
 class LocationMarker extends StatefulWidget {
   const LocationMarker({Key? key, this.lat, this.lng, this.heading})
-      : super(key: key);
+    : super(key: key);
   final double? lat;
   final double? lng;
   final double? heading;
@@ -26,7 +28,7 @@ class _LocationMarkerState extends State<LocationMarker> {
         Marker(
           point: LatLng(widget.lat!, widget.lng!),
           child: Transform.rotate(
-            angle: 180 + (widget.heading ?? 0),
+            angle: (180 + (widget.heading ?? 0)) * math.pi / 180,
             child: Stack(
               alignment: Alignment.center,
               children: [

@@ -3,10 +3,11 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <application
-        android:label="OSEA"
+        android:label="${appLabel}"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/launcher_icon">

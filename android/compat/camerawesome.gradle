@@ -1,0 +1,151 @@
+// Adapted from camerawesome 2.5.0; see camerawesome.LICENSE and README.md.
+group 'com.apparence.camerawesome'
+version '1.0'
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+
+def DEFAULT_PLAY_SERVICES_LOCATION_VERSION = "21.3.0"
+def DEFAULT_EXIF_INTERFACE_VERSION = "1.4.0"
+def DEFAULT_COMPILE_SDK_VERSION = 33
+def DEFAULT_MIN_SDK_VERSION = 21
+def DEFAULT_MEDIA_VERSION = "1.7.0"
+
+def getMajor(versionTab) {
+    versionTab == null ? null : versionTab[0].split("\\-")[0]
+}
+
+
+def getMinor(versionTab) {
+    versionTab == null ? null : versionTab.length > 1 ? versionTab[1].split("\\-")[0] : null
+}
+
+
+def getPatch(versionTab) {
+    versionTab == null ? null : versionTab.length > 2 ? versionTab[2].split("\\-")[0] : null
+}
+
+def isWithinRange(value, min, max) {
+    if (value == null && min == null && max == null) {
+        return true
+    } else if (value == null) {
+        return false
+    }
+    if (min != null && max != null) {
+        return (min..max).contains(value)
+    } else if (min != null) {
+        return value >= min
+    } else if (max != null) {
+        return value <= max
+    } else {
+        return true
+    }
+}
+
+def isVersionInRange(version, min, max) {
+    if (version == null) {
+        return false
+    }
+    def tabVersion = version.toString().split("\\.")
+    def tabMin = min == null ? null : min.toString().split("\\.")
+    def tabMax = max == null ? null : max.toString().split("\\.")
+
+    return isWithinRange(getMajor(tabVersion), getMajor(tabMin), getMajor(tabMax))
+            && isWithinRange(getMinor(tabVersion), getMinor(tabMin), getMinor(tabMax))
+            && isWithinRange(getPatch(tabVersion), getPatch(tabMin), getPatch(tabMax))
+}
+
+def compatibleVersion(prop, fallbackVersion, min = null, max = null) {
+    if (rootProject.ext.has(prop) && isVersionInRange(rootProject.ext.get(prop), min, max)) {
+        return rootProject.ext.get(prop)
+    } else {
+        if (rootProject.ext.has(prop)) {
+            println("************************** CamerAwesome **************************")
+            println("${prop} ${rootProject.ext.get(prop)} is not compatible with the plugin.")
+            if (min != null && max != null) {
+                println("Please use a version between ${min} and ${max}.")
+            } else if (min != null) {
+                println("Please use a version >= ${min}.")
+            } else if (max != null) {
+                println("Please use a version <= ${max}.")
+            }
+            println("Using fallback version ${fallbackVersion}.")
+            println("******************************************************************")
+        }
+        return fallbackVersion
+    }
+}
+
+android {
+    compileSdkVersion 34
+    namespace 'io.apparence.camerawesome'
+
+    defaultConfig {
+        minSdkVersion 24
+        targetSdk = 34
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+    }
+}
+
+dependencies {
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.4'
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'androidx.test:rules:1.6.1'
+    // implementation project(path: ':integration_test')
+    // def compatPlayServicesLocationVersion = compatibleVersion('playServicesLocationVersion', DEFAULT_PLAY_SERVICES_LOCATION_VERSION)
+    // implementation "com.google.android.gms:play-services-location:$compatPlayServicesLocationVersion"
+    // def compatExifInterfaceVersion = compatibleVersion('compatExifInterfaceVersion', DEFAULT_EXIF_INTERFACE_VERSION)
+    // implementation "androidx.exifinterface:exifinterface:$compatExifInterfaceVersion"
+    implementation "com.google.android.gms:play-services-location:$DEFAULT_PLAY_SERVICES_LOCATION_VERSION"
+    implementation "androidx.exifinterface:exifinterface:$DEFAULT_EXIF_INTERFACE_VERSION"
+
+    testImplementation 'junit:junit:4.13.2'
+    // Optional -- Mockito framework
+    testImplementation "org.mockito:mockito-core:5.0.0"
+    // Optional -- mockito-kotlin
+    testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
+    
+
+    def camerax_version = "1.4.2"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-video:${camerax_version}"
+
+    implementation "androidx.camera:camera-view:${camerax_version}"
+    implementation "androidx.camera:camera-extensions:${camerax_version}"
+    def compatMediaVersion = compatibleVersion('compatMediaVersion', DEFAULT_MEDIA_VERSION)
+    // implementation "androidx.media:media:${compatMediaVersion}"
+    implementation "androidx.media:media:$DEFAULT_MEDIA_VERSION"
+
+    implementation 'com.google.guava:guava:33.4.0-android'
+
+}

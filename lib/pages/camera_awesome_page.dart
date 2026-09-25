@@ -11,8 +11,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-class CameraPage extends StatelessWidget {
+class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
+
+  @override
+  State<CameraPage> createState() => _CameraPageState();
+}
+
+class _CameraPageState extends State<CameraPage> {
+  bool _returnedPhoto = false;
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +28,18 @@ class CameraPage extends StatelessWidget {
         color: Colors.white,
         child: CameraAwesomeBuilder.awesome(
           onMediaCaptureEvent: (event) {
+            if (!mounted ||
+                _returnedPhoto ||
+                ModalRoute.of(context)?.isCurrent != true) {
+              return;
+            }
             switch ((event.status, event.isPicture, event.isVideo)) {
               case (MediaCaptureStatus.success, true, false):
                 event.captureRequest.when(
                   single: (single) {
                     final path = single.file?.path;
                     if (path != null) {
+                      _returnedPhoto = true;
                       Navigator.pop(context, XFile(path));
                     }
                   },
@@ -35,9 +48,8 @@ class CameraPage extends StatelessWidget {
                 debugPrint('Other event: $event');
             }
           },
-          saveConfig: SaveConfig.photoAndVideo(
-            initialCaptureMode: CaptureMode.photo,
-            photoPathBuilder: (sensors) async {
+          saveConfig: SaveConfig.photo(
+            pathBuilder: (sensors) async {
               final Directory extDir = await getTemporaryDirectory();
               final testDir = await Directory(
                 '${extDir.path}/camerawesome',
@@ -48,13 +60,11 @@ class CameraPage extends StatelessWidget {
                 return SingleCaptureRequest(filePath, sensors.first);
               }
               // Separate pictures taken with front and back camera
-              return MultipleCaptureRequest(
-                {
-                  for (final sensor in sensors)
-                    sensor:
-                        '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
-                },
-              );
+              return MultipleCaptureRequest({
+                for (final sensor in sensors)
+                  sensor:
+                      '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
+              });
             },
             exifPreferences: ExifPreferences(saveGPSLocation: false),
           ),

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -24,7 +23,18 @@ import 'map_page.dart';
 final ImagePicker picker = ImagePicker();
 
 class PredictScreen extends StatefulWidget {
-  const PredictScreen({super.key});
+  const PredictScreen({
+    super.key,
+    this.detect = AiTools.birdDetect,
+    this.identify = AiTools.birdID,
+    this.pickImage,
+    this.autoCrop = tools.autoCrop,
+  });
+
+  final Future<List<DetectionResult>> Function(Uint8List) detect;
+  final Future<List<double>> Function(Uint8List) identify;
+  final Future<XFile?> Function(ImageSource)? pickImage;
+  final Future<Uint8List?> Function(Uint8List, DetectionBox) autoCrop;
 
   @override
   State<PredictScreen> createState() => _PredictScreenState();
@@ -32,6 +42,7 @@ class PredictScreen extends StatefulWidget {
 
 class _PredictScreenState extends State<PredictScreen> {
   static const int _birdIndex = 16;
+  static const double _minimumDetectionScore = 0.5;
 
   List<PredictResult> _topResults = [];
   List<DetectionResult> _detectionResults = [];
@@ -47,6 +58,7 @@ class _PredictScreenState extends State<PredictScreen> {
   Uint8List _image = Uint8List(0);
 
   bool _isProcessing = false;
+  Future<void> Function()? _retryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -56,24 +68,32 @@ class _PredictScreenState extends State<PredictScreen> {
         title: Text(AppLocale.title.getString(context)),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator
-                  .push(context, MaterialPageRoute(builder: (context) => SettingsPage()))
-                  .then((e) => setState(() {}));
-            },
+            onPressed: _isProcessing
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingsPage()),
+                    ).then((e) {
+                      if (mounted) setState(() {});
+                    });
+                  },
             icon: Icon(Icons.settings_rounded),
           ),
         ],
         leading: IconButton(
-          onPressed: () {
-            Navigator
-                .push(context, MaterialPageRoute(builder: (context) => MapPage()))
-                .then((e) {
-              if (_predictions.isNotEmpty) {
-                _endProcess();
-              }
-            });
-          },
+          onPressed: _isProcessing
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MapPage()),
+                  ).then((e) {
+                    if (mounted && _predictions.isNotEmpty) {
+                      _runProcess(_endProcess);
+                    }
+                  });
+                },
           icon: Icon(Icons.location_on_rounded),
         ),
       ),
@@ -81,184 +101,205 @@ class _PredictScreenState extends State<PredictScreen> {
         onPressed: () {},
         icon: IconButton(
           icon: const Icon(Icons.image_rounded),
-          onPressed: _pickPhoto,
+          onPressed: _isProcessing ? null : _pickPhoto,
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(100)),
         ),
         label: IconButton(
           icon: const Icon(Icons.camera_alt_rounded),
-          onPressed: _takePhoto,
+          onPressed: _isProcessing ? null : _takePhoto,
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Stack(
         children: [
           _image.isNotEmpty
-              ? OrientationBuilder(builder: (context, orientation) {
-                  final imageWidget = Expanded(
-                    child: Stack(
-                      children: [
-                        BlurredImageWidget(
-                          imageProvider: MemoryImage(_image),
-                          backProvider: MemoryImage(_file),
-                        ),
-                        Positioned(
-                          left: 4,
-                          bottom: 4,
-                          child: IconButton.filled(
-                            onPressed: _reCropImage,
-                            icon: Icon(Icons.crop_rounded),
+              ? OrientationBuilder(
+                  builder: (context, orientation) {
+                    final imageWidget = Expanded(
+                      child: Stack(
+                        children: [
+                          BlurredImageWidget(
+                            imageProvider: MemoryImage(_image),
+                            backProvider: MemoryImage(_file),
                           ),
-                        ),
-                        if (_objIndex > 0)
                           Positioned(
                             left: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: IconButton.filled(
-                                onPressed: () {
-                                  _objIndex--;
-                                  _switchCrop();
-                                },
-                                icon: Icon(Icons.arrow_left_rounded),
+                            bottom: 4,
+                            child: IconButton.filled(
+                              onPressed: _isProcessing ? null : _reCropImage,
+                              icon: Icon(Icons.crop_rounded),
+                            ),
+                          ),
+                          if (_objIndex > 0)
+                            Positioned(
+                              left: 4,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    if (_isProcessing) return;
+                                    _objIndex--;
+                                    _switchCrop();
+                                  },
+                                  icon: Icon(Icons.arrow_left_rounded),
+                                ),
                               ),
                             ),
-                          ),
-                        if (_objIndex < _detectionResults.length - 1)
-                          Positioned(
-                            right: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: IconButton.filled(
-                                onPressed: () {
-                                  _objIndex++;
-                                  _switchCrop();
-                                },
-                                icon: Icon(Icons.arrow_right_rounded),
+                          if (_objIndex < _detectionResults.length - 1)
+                            Positioned(
+                              right: 4,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    if (_isProcessing) return;
+                                    _objIndex++;
+                                    _switchCrop();
+                                  },
+                                  icon: Icon(Icons.arrow_right_rounded),
+                                ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  );
-                  if (orientation == Orientation.portrait) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        imageWidget,
-                        if (isOutOfRange)
-                          Center(
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                              child: Text(
-                                AppLocale.outOfRange.getString(context),
-                              ),
-                            ),
-                          ),
-                        Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.all(16),
-                            child: ListView(
-                              children: _topResults
-                                  .map((e) => ResultTile(result: e))
-                                  .toList(),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  } else {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        imageWidget,
-                        Expanded(
-                          child: Column(
-                            children: [
-                              if (isOutOfRange)
-                                Center(
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                                    child: Text(
-                                      AppLocale.outOfRange.getString(context),
+                    if (orientation == Orientation.portrait) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          imageWidget,
+                          if (isOutOfRange)
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                                child: Text(
+                                  AppLocale.outOfRange.getString(context),
+                                ),
+                              ),
+                            ),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.all(16),
+                              child: ListView(
+                                children: _topResults
+                                    .map((e) => ResultTile(result: e))
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          imageWidget,
+                          Expanded(
+                            child: Column(
+                              children: [
+                                if (isOutOfRange)
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        16,
+                                        16,
+                                        0,
+                                      ),
+                                      child: Text(
+                                        AppLocale.outOfRange.getString(context),
+                                      ),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.all(16),
+                                    child: ListView(
+                                      children: _topResults
+                                          .map((e) => ResultTile(result: e))
+                                          .toList(),
                                     ),
                                   ),
                                 ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(16),
-                                  child: ListView(
-                                    children: _topResults
-                                        .map((e) => ResultTile(result: e))
-                                        .toList(),
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  }
-                })
+                        ],
+                      );
+                    }
+                  },
+                )
               : Center(
                   child: Text(
                     AppLocale.imgNeeded.getString(context),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-          if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+          if (_isProcessing) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
   }
 
-  Future<void> _takePhoto() async {
+  Future<void> _runProcess(Future<void> Function() action) async {
+    if (_isProcessing || !mounted) return;
+    _retryAction = null;
+    setState(() => _isProcessing = true);
+    try {
+      await action();
+      _retryAction = null;
+    } catch (error, stack) {
+      debugPrint('Identification failed: $error\n$stack');
+      if (mounted) {
+        _retryAction ??= action;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocale.processingFailed.getString(context)),
+            action: SnackBarAction(
+              label: AppLocale.retry.getString(context),
+              onPressed: () {
+                final retry = _retryAction;
+                if (retry != null) _runProcess(retry);
+              },
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<XFile?> _pickImage(ImageSource source) =>
+      widget.pickImage?.call(source) ?? picker.pickImage(source: source);
+
+  Future<void> _takePhoto() => _runProcess(() async {
     XFile? photo;
     try {
-      // call device stock camera
-      photo = await picker.pickImage(source: ImageSource.camera);
-    } catch (e) {
-      // if stock camera is unavailable, use built-in camera
+      photo = await _pickImage(ImageSource.camera);
+    } catch (_) {
       if (mounted) {
-        photo = await Navigator.push(
+        photo = await Navigator.push<XFile>(
           context,
-          MaterialPageRoute(builder: (context) => const CameraPage()),
+          MaterialPageRoute(builder: (_) => const CameraPage()),
         );
       }
     }
+    if (photo != null && mounted) await _startNewPredict(photo);
+  });
 
-    if (photo != null) {
-      _startNewPredict(photo);
-    }
-  }
+  Future<void> _pickPhoto() => _runProcess(() async {
+    final image = await _pickImage(ImageSource.gallery);
+    if (image != null && mounted) await _startNewPredict(image);
+  });
 
-  Future<void> _pickPhoto() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      _startNewPredict(image);
-    }
-  }
-
-  void _startProcess() {
-    setState(() {
-      // clear previous id result
-      _topResults.clear();
-      _isProcessing = true;
-    });
-  }
-
-  void _endProcess() async {
+  Future<void> _endProcess() async {
     final List<MapEntry<int, double>> filtered;
 
     switch (SharedPrefTool.locationFilter) {
@@ -280,7 +321,9 @@ class _PredictScreenState extends State<PredictScreen> {
             return;
           }
 
-          Fluttertoast.showToast(msg: AppLocale.locationRetrieveFailed.getString(context));
+          Fluttertoast.showToast(
+            msg: AppLocale.locationRetrieveFailed.getString(context),
+          );
           filtered = _predictions.asMap().entries.toList();
         } else {
           filtered = await Distribution.getFilteredPredictions(
@@ -291,7 +334,9 @@ class _PredictScreenState extends State<PredictScreen> {
         }
         break;
       default:
-        Fluttertoast.showToast(msg: AppLocale.locationFilterError.getString(context));
+        Fluttertoast.showToast(
+          msg: AppLocale.locationFilterError.getString(context),
+        );
         filtered = _predictions.asMap().entries.toList();
         break;
     }
@@ -306,75 +351,93 @@ class _PredictScreenState extends State<PredictScreen> {
 
     if (results.isEmpty) {
       isOutOfRange = true;
-      results = tools.getTop(tools.softmax(_predictions.asMap().entries.toList()));
+      results = tools.getTop(
+        tools.softmax(_predictions.asMap().entries.toList()),
+      );
     } else {
       isOutOfRange = false;
     }
 
+    if (!mounted) return;
     setState(() {
       _topResults = results;
-      _isProcessing = false;
     });
   }
 
-  void _startNewPredict(XFile xFile) async {
-    _startProcess();
+  Future<void> _startNewPredict(XFile xFile) async {
+    _retryAction = () => _startNewPredict(xFile);
+    setState(() {
+      _topResults = [];
+      _image = Uint8List(0);
+      _predictions = [];
+    });
     isOutOfRange = false;
-    _file = await File(xFile.path).readAsBytes();
-    _detectionResults = (await AiTools.birdDetect(_file))
-        .where((e) => e.cls == _birdIndex)
+    _file = await xFile.readAsBytes();
+    _detectionResults = (await widget.detect(_file))
+        .where(
+          (e) =>
+              e.cls == _birdIndex &&
+              e.score.isFinite &&
+              e.score >= _minimumDetectionScore &&
+              e.box.isValid,
+        )
         .toList();
     _objIndex = 0;
     final Uint8List crop;
 
     if (_detectionResults.isNotEmpty) {
-      crop = await tools.autoCrop(_file, _detectionResults[_objIndex].box) ?? _file;
+      crop =
+          await widget.autoCrop(_file, _detectionResults[_objIndex].box) ??
+          _file;
     } else if (mounted) {
       crop = (await tools.manuallyCrop(context, _file)) ?? _file;
     } else {
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _image = crop;
+      _topResults = [];
+      _predictions = [];
     });
 
-    _predictions = await AiTools.birdID(_image);
-    _endProcess();
+    _predictions = PredictResult.labeledScores(await widget.identify(_image));
+    if (mounted) await _endProcess();
   }
 
-  Future<void> _reCropImage() async {
-    _startProcess();
-
+  Future<void> _reCropImage() => _runProcess(() async {
     final Uint8List? crop = await tools.manuallyCrop(context, _file);
 
-    if (crop is Uint8List) {
-      setState(() {
-        _image = crop;
-      });
-    }
+    if (!mounted || crop == null) return;
+    setState(() {
+      _image = crop;
+      _topResults = [];
+      _predictions = [];
+      _objIndex = -1;
+    });
 
-    _predictions = await AiTools.birdID(_image);
+    _predictions = PredictResult.labeledScores(await widget.identify(_image));
 
-    _endProcess();
+    if (mounted) await _endProcess();
+  });
 
-    _objIndex = -1;
-  }
-
-  Future<void> _switchCrop() async {
+  Future<void> _switchCrop() => _runProcess(() async {
     if (_detectionResults.isEmpty) {
       return;
     }
 
-    _startProcess();
+    final crop =
+        await widget.autoCrop(_file, _detectionResults[_objIndex].box) ?? _file;
 
-    final crop = await tools.autoCrop(_file, _detectionResults[_objIndex].box) ?? _file;
-
+    if (!mounted) return;
     setState(() {
       _image = crop;
+      _topResults = [];
+      _predictions = [];
     });
 
-    _predictions = await AiTools.birdID(_image);
-    _endProcess();
-  }
+    _predictions = PredictResult.labeledScores(await widget.identify(_image));
+    if (mounted) await _endProcess();
+  });
 }

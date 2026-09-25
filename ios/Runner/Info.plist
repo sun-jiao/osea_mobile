@@ -43,10 +43,31 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
     <key>NSCameraUsageDescription</key>
-    <string>Take photos when fails in calling </string>
+    <string>Take a photo to identify a bird.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>To enable GPS location access for distribution filter</string>
     <key>NSPhotoLibraryUsageDescription</key>

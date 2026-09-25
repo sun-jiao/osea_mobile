@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -8,13 +7,13 @@ import '../entities/localization_mixin.dart';
 import 'device_tool.dart';
 
 // Merge service unavailability to LocationPermission.unableToDetermine
-Future<LocationPermission> locationAvailabilityChecker(BuildContext context) async {
+Future<LocationPermission> locationAvailabilityChecker(
+  BuildContext context,
+) async {
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocale.locationDisabled.getString(context)),
-      ),
+      SnackBar(content: Text(AppLocale.locationDisabled.getString(context))),
     );
     return LocationPermission.unableToDetermine;
   }
@@ -30,7 +29,9 @@ Future<LocationPermission> locationAvailabilityChecker(BuildContext context) asy
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocale.locationPermissionDenied.getString(context)),
+            content: Text(
+              AppLocale.locationPermissionDenied.getString(context),
+            ),
           ),
         );
       }
@@ -38,7 +39,8 @@ Future<LocationPermission> locationAvailabilityChecker(BuildContext context) asy
     }
   }
 
-  if (locationPermission == LocationPermission.deniedForever && context.mounted) {
+  if (locationPermission == LocationPermission.deniedForever &&
+      context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocale.locationPermissionDenied.getString(context)),
@@ -50,36 +52,41 @@ Future<LocationPermission> locationAvailabilityChecker(BuildContext context) asy
   return locationPermission;
 }
 
-Future<LocationSettings> getLocationSettings() async {
+Future<LocationSettings> getLocationSettings({Duration? timeLimit}) async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     return AndroidSettings(
       forceLocationManager: await DeviceTool().isGoogleAval,
+      timeLimit: timeLimit,
     );
   } else {
-    return const LocationSettings();
+    return LocationSettings(timeLimit: timeLimit);
   }
 }
 
 Future<Position?> getCurrentLocation(BuildContext context) async {
-  final locationAvailable = await locationAvailabilityChecker(context);
-  if (locationAvailable.isFalse()) {
+  try {
+    final locationAvailable = await locationAvailabilityChecker(context);
+    if (!context.mounted || locationAvailable.isFalse()) return null;
+    return await Geolocator.getCurrentPosition(
+      locationSettings: await getLocationSettings(
+        timeLimit: const Duration(seconds: 15),
+      ),
+    );
+  } catch (error) {
+    debugPrint('Location unavailable: $error');
     return null;
   }
-
-  return await Geolocator.getCurrentPosition(
-    locationSettings: await getLocationSettings(),
-  );
 }
 
 extension ToBool on LocationPermission {
-  isTrue() {
+  bool isTrue() {
     return [
       LocationPermission.whileInUse,
       LocationPermission.always,
     ].contains(this);
   }
 
-  isFalse() {
+  bool isFalse() {
     return [
       LocationPermission.denied,
       LocationPermission.deniedForever,

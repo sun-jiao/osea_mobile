@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:onnxruntime/onnxruntime.dart';
@@ -19,8 +21,11 @@ Future<void> main() async {
     SharedPrefTool.loadSettings(),
     AppDir.setDir(),
   ]);
-  AiTools.initFuture();
-  Distribution.initFuture();
+  unawaited(
+    AiTools.initFuture().catchError((Object error) {
+      debugPrint('Model initialization failed: $error');
+    }),
+  );
   runApp(const MyApp());
 }
 
@@ -38,14 +43,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     _localization.init(
       mapLocales: [
-        const MapLocale(
-          'en',
-          AppLocale.EN,
-        ),
-        const MapLocale(
-          'zh',
-          AppLocale.ZH,
-        ),
+        const MapLocale('en', AppLocale.EN),
+        const MapLocale('zh', AppLocale.ZH),
       ],
       initLanguageCode: 'en',
     );
@@ -56,13 +55,19 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    OrtEnv.instance.release();
-    Distribution.closeDB();
+    _localization.onTranslatedLanguage = null;
+    unawaited(_releaseResources());
     super.dispose();
   }
 
+  Future<void> _releaseResources() async {
+    await AiTools.dispose();
+    OrtEnv.instance.release();
+    await Distribution.closeDB();
+  }
+
   void _onTranslatedLanguage(Locale? locale) {
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   // This widget is the root of your application.

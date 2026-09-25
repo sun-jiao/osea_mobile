@@ -12,6 +12,18 @@ class PredictResult {
 
   PredictResult(this.cls, this.prob);
 
+  /// Model output IDs are positional. Never rank channels without a label.
+  static List<double> labeledScores(List<double> logits) {
+    if (speciesInfo.isEmpty || logits.length < speciesInfo.length) {
+      throw StateError('Model output does not cover the loaded species labels');
+    }
+    final scores = logits.take(speciesInfo.length).toList();
+    if (scores.any((value) => !value.isFinite)) {
+      throw const FormatException('Model returned non-finite scores');
+    }
+    return scores;
+  }
+
   String get label {
     try {
       // default English common name
@@ -34,8 +46,9 @@ class PredictResult {
       return;
     }
 
-    final String birdInfoJson =
-        await rootBundle.loadString('assets/labels/bird_info.json');
+    final String birdInfoJson = await rootBundle.loadString(
+      'assets/labels/bird_info.json',
+    );
     speciesInfo = json.decode(birdInfoJson);
   }
 }

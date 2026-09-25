@@ -1,6 +1,9 @@
 // ignore_for_file: constant_identifier_names
 
 mixin AppLocale {
+  static const String processingFailed = 'processingFailed';
+  static const String retry = 'retry';
+  static const String cropFailed = 'cropFailed';
   static const String title = 'title';
   static const String imgNeeded = 'imgNeeded';
   static const String settings = 'settings';
@@ -23,6 +26,9 @@ mixin AppLocale {
   static const String openSourceLicenses = 'openSourceLicenses';
 
   static const Map<String, dynamic> EN = {
+    processingFailed: 'Could not identify this image. Please try again.',
+    retry: 'Retry',
+    cropFailed: 'Could not crop the image. Adjust the crop and try again.',
     title: 'OSEA Bird ID',
     imgNeeded: 'Upload a bird image to recognize it',
     settings: 'Settings',
@@ -32,19 +38,27 @@ mixin AppLocale {
     commonName: 'Common name',
     scientificName: 'Scientific name',
     nameBoth: 'Both',
-    outOfRange: 'No results found in the specified range. Showing result from global.',
+    outOfRange:
+        'No results found in the specified range. Showing result from global.',
     locationSelection: 'Location Selection',
-    locationDisabled: "Location services are disabled. Please enable the services",
-    locationPermissionDenied: "Location permissions are permanently denied, we cannot request permissions",
+    locationDisabled:
+        "Location services are disabled. Please enable the services",
+    locationPermissionDenied:
+        "Location permissions are permanently denied, we cannot request permissions",
     locationFilter: 'Distribution Filter',
     locationFilterFix: 'Fixed location (select on map)',
     locationFilterAuto: 'Auto update (based on device location)',
     locationFilterOff: 'Turn off location filter',
-    locationRetrieveFailed: 'Failed in retrieving device location, distribution filter not applied.',
-    locationFilterError: 'Distribution filter not applied due to unknown error.',
+    locationRetrieveFailed:
+        'Failed in retrieving device location, distribution filter not applied.',
+    locationFilterError:
+        'Distribution filter not applied due to unknown error.',
     openSourceLicenses: 'Open source licenses',
   };
   static const Map<String, dynamic> ZH = {
+    processingFailed: '识别失败，请重试或选择其他图片。',
+    retry: '重试',
+    cropFailed: '裁剪失败，请调整选区后重试。',
     title: 'OSEA鸟类识别',
     imgNeeded: '请上传图片以供识别',
     settings: '设置',
@@ -68,7 +82,4 @@ mixin AppLocale {
   };
 }
 
-const Map<String, String> languageMap = {
-  'en': 'English',
-  'zh': '中文',
-};
+const Map<String, String> languageMap = {'en': 'English', 'zh': '中文'};

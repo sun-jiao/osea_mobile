@@ -18,11 +18,18 @@ class SharedPrefTool {
     while (prefs == null) {
       prefs = await SharedPreferences.getInstance();
     }
-    
-    selectedSpeciesDisplay = prefs!.getString(AppLocale.nameDisplay) ?? AppLocale.nameBoth;
-    uiLanguage = prefs!.getString(AppLocale.uiLanguage) ?? Platform.localeName.split(RegExp('[_-]')).first;
+
+    selectedSpeciesDisplay =
+        prefs!.getString(AppLocale.nameDisplay) ?? AppLocale.nameBoth;
+    uiLanguage =
+        prefs!.getString(AppLocale.uiLanguage) ??
+        Platform.localeName.split(RegExp('[_-]')).first;
+    if (!languageMap.containsKey(uiLanguage)) uiLanguage = 'en';
     cnLanguage = prefs!.getString(AppLocale.cnLanguage) ?? uiLanguage;
-    locationFilter = prefs!.getString(AppLocale.locationFilter) ?? AppLocale.locationFilterOff;
+    if (!languageMap.containsKey(cnLanguage)) cnLanguage = 'en';
+    locationFilter =
+        prefs!.getString(AppLocale.locationFilter) ??
+        AppLocale.locationFilterOff;
     locationFilterLat = prefs!.getDouble('lat') ?? 0.0;
     locationFilterLng = prefs!.getDouble('lng') ?? 0.0;
   }
@@ -32,7 +39,7 @@ class SharedPrefTool {
     while (prefs == null) {
       prefs = await SharedPreferences.getInstance();
     }
-    
+
     await Future.wait([
       prefs!.setString(AppLocale.nameDisplay, selectedSpeciesDisplay),
       prefs!.setString(AppLocale.uiLanguage, uiLanguage),

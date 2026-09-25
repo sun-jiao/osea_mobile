@@ -22,117 +22,111 @@ class _SettingsPageState extends State<SettingsPage> {
         SharedPrefTool.saveSettings();
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocale.settings.getString(context)),
-        ),
+        appBar: AppBar(title: Text(AppLocale.settings.getString(context))),
         body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // UI language
-              ListTile(
-                title: Text(AppLocale.uiLanguage.getString(context),
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(languageMap[SharedPrefTool.uiLanguage]!),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SettingsChildPage(
-                        title: AppLocale.uiLanguage.getString(context),
-                        map: languageMap,
-                        selected: SharedPrefTool.uiLanguage,
-                        callback: (value) {
-                          FlutterLocalization.instance.translate(value);
-                          SharedPrefTool.uiLanguage = value;
-                        },
+          child: RadioGroup<String>(
+            groupValue: SharedPrefTool.selectedSpeciesDisplay,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => SharedPrefTool.selectedSpeciesDisplay = value);
+              }
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // UI language
+                ListTile(
+                  title: Text(
+                    AppLocale.uiLanguage.getString(context),
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(languageMap[SharedPrefTool.uiLanguage]!),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SettingsChildPage(
+                          title: AppLocale.uiLanguage.getString(context),
+                          map: languageMap,
+                          selected: SharedPrefTool.uiLanguage,
+                          callback: (value) {
+                            FlutterLocalization.instance.translate(value);
+                            SharedPrefTool.uiLanguage = value;
+                          },
+                        ),
                       ),
-                    ),
-                  ).then((value) {
-                    setState(() {});
-                  });
-                },
-              ),
-              Divider(),
+                    ).then((value) {
+                      if (mounted) setState(() {});
+                    });
+                  },
+                ),
+                Divider(),
 
-              // Common name language
-              ListTile(
-                title: Text(AppLocale.cnLanguage.getString(context),
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(languageMap[SharedPrefTool.cnLanguage]!),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SettingsChildPage(
-                        title: AppLocale.cnLanguage.getString(context),
-                        map: languageMap,
-                        selected: SharedPrefTool.cnLanguage,
-                        callback: (value) {
-                          SharedPrefTool.cnLanguage = value;
-                        },
+                // Common name language
+                ListTile(
+                  title: Text(
+                    AppLocale.cnLanguage.getString(context),
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(languageMap[SharedPrefTool.cnLanguage]!),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SettingsChildPage(
+                          title: AppLocale.cnLanguage.getString(context),
+                          map: languageMap,
+                          selected: SharedPrefTool.cnLanguage,
+                          callback: (value) {
+                            SharedPrefTool.cnLanguage = value;
+                          },
+                        ),
                       ),
-                    ),
-                  ).then((value) {
-                    setState(() {});
-                  });
-                },
-              ),
-              Divider(),
+                    ).then((value) {
+                      if (mounted) setState(() {});
+                    });
+                  },
+                ),
+                Divider(),
 
-              // Species Name Display
-              ListTile(
-                title: Text(AppLocale.nameDisplay.getString(context),
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocale.commonName.getString(context)),
-                value: AppLocale.commonName,
-                groupValue: SharedPrefTool.selectedSpeciesDisplay,
-                onChanged: (value) {
-                  setState(() {
-                    SharedPrefTool.selectedSpeciesDisplay = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocale.scientificName.getString(context)),
-                value: AppLocale.scientificName,
-                groupValue: SharedPrefTool.selectedSpeciesDisplay,
-                onChanged: (value) {
-                  setState(() {
-                    SharedPrefTool.selectedSpeciesDisplay = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text(AppLocale.nameBoth.getString(context)),
-                value: AppLocale.nameBoth,
-                groupValue: SharedPrefTool.selectedSpeciesDisplay,
-                onChanged: (value) {
-                  setState(() {
-                    SharedPrefTool.selectedSpeciesDisplay = value!;
-                  });
-                },
-              ),
-              Divider(),
-              ListTile(
-                title: Text(AppLocale.openSourceLicenses.getString(context)),
-                onTap: () => showAboutDialog(
-                  applicationName: AppLocale.title.getString(context),
-                  context: context,
+                // Species Name Display
+                ListTile(
+                  title: Text(
+                    AppLocale.nameDisplay.getString(context),
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              Divider(),
-              ListTile(
-                title: Text('GitHub'),
-                trailing: Icon(Icons.open_in_browser_rounded),
-                onTap: () => launchUrl(
-                  Uri.parse("https://github.com/sun-jiao/osea_mobile"),
-                  mode: LaunchMode.externalApplication,
+                RadioListTile<String>(
+                  title: Text(AppLocale.commonName.getString(context)),
+                  value: AppLocale.commonName,
                 ),
-              ),
-            ],
+                RadioListTile<String>(
+                  title: Text(AppLocale.scientificName.getString(context)),
+                  value: AppLocale.scientificName,
+                ),
+                RadioListTile<String>(
+                  title: Text(AppLocale.nameBoth.getString(context)),
+                  value: AppLocale.nameBoth,
+                ),
+                Divider(),
+                ListTile(
+                  title: Text(AppLocale.openSourceLicenses.getString(context)),
+                  onTap: () => showAboutDialog(
+                    applicationName: AppLocale.title.getString(context),
+                    context: context,
+                  ),
+                ),
+                Divider(),
+                ListTile(
+                  title: Text('GitHub'),
+                  trailing: Icon(Icons.open_in_browser_rounded),
+                  onTap: () => launchUrl(
+                    Uri.parse("https://github.com/sun-jiao/osea_mobile"),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
